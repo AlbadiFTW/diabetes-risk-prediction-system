@@ -52,9 +52,25 @@ export interface MLPredictionResponse {
 
 export class MLApiClient {
   private baseUrl: string;
+  private apiKey: string | null;
 
-  constructor(baseUrl: string = 'http://localhost:5000') {
+  constructor(baseUrl: string = 'http://localhost:5000', apiKey?: string) {
     this.baseUrl = baseUrl;
+    // Get API key from environment variable or parameter
+    this.apiKey = apiKey || import.meta.env.VITE_ML_API_KEY || null;
+  }
+
+  private getHeaders(): HeadersInit {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add API key if available
+    if (this.apiKey) {
+      headers['X-API-Key'] = this.apiKey;
+    }
+    
+    return headers;
   }
 
   /**
@@ -64,9 +80,7 @@ export class MLApiClient {
     try {
       const response = await fetch(`${this.baseUrl}/health`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getHeaders(),
       });
       
       if (response.ok) {
@@ -87,9 +101,7 @@ export class MLApiClient {
     try {
       const response = await fetch(`${this.baseUrl}/predict`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getHeaders(),
         body: JSON.stringify(data),
       });
 
@@ -112,9 +124,7 @@ export class MLApiClient {
     try {
       const response = await fetch(`${this.baseUrl}/model/info`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getHeaders(),
       });
 
       if (!response.ok) {
@@ -135,9 +145,7 @@ export class MLApiClient {
     try {
       const response = await fetch(`${this.baseUrl}/batch_predict`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.getHeaders(),
         body: JSON.stringify({ patients }),
       });
 

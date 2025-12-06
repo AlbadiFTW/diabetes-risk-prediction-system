@@ -4,7 +4,7 @@ import joblib
 import numpy as np
 import os
 from typing import Dict, Any, Tuple, List
-from cors_config import configure_cors
+from cors_config import configure_cors, get_limiter, require_api_key, rate_limit
 
 # Try to import improved model, fallback to original
 try:
@@ -19,7 +19,10 @@ except ImportError:
     MODEL_FILE = 'diabetes_model.pkl'
 
 app = Flask(__name__)
-configure_cors(app)  # Configure CORS with proper settings
+configure_cors(app)  # Configure CORS, Rate Limiting, and Security Headers
+
+# Get the limiter instance after configuration
+limiter = get_limiter()
 
 # Global predictor instance
 predictor = None
@@ -378,13 +381,17 @@ def load_model():
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """Health check endpoint - no rate limit, no API key required"""
     return jsonify({
         'status': 'healthy',
-        'model_loaded': predictor is not None
+        'model_loaded': predictor is not None,
+        'rate_limiting': 'enabled',
+        'api_key_required': bool(os.getenv('ML_API_KEY'))
     })
 
 @app.route('/predict', methods=['POST'])
+@rate_limit("20 per minute")  # Rate limit: 20 requests per minute
+@require_api_key  # Require valid API key
 def predict_diabetes_risk():
     """Predict diabetes risk for a patient"""
     try:
@@ -538,6 +545,7 @@ def predict_diabetes_risk():
         }), 500
 
 @app.route('/model/info', methods=['GET'])
+@require_api_key  # Require valid API key
 def model_info():
     """Get information about the trained model"""
     try:
@@ -572,6 +580,8 @@ def model_info():
         }), 500
 
 @app.route('/batch_predict', methods=['POST'])
+@rate_limit("5 per minute")  # Rate limit: 5 requests per minute (more restrictive)
+@require_api_key  # Require valid API key
 def batch_predict():
     """Predict diabetes risk for multiple patients"""
     try:
@@ -656,12 +666,31 @@ def batch_predict():
             'error': f'Batch prediction failed: {str(e)}'
         }), 500
 
+# ==================== Rate Limit Error Handler ====================
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    """Handle rate limit exceeded errors"""
+    return jsonify({
+        'error': 'Rate limit exceeded',
+        'message': str(e.description),
+        'retry_after': e.get_retry_after() if hasattr(e, 'get_retry_after') else None
+    }), 429
+
 if __name__ == '__main__':
     print("Starting Diabetes Risk Prediction API...")
+    print(f"Environment: {os.getenv('FLASK_ENV', 'development')}")
+    print(f"API Key Required: {bool(os.getenv('ML_API_KEY'))}")
     
     # Load model on startup
     if load_model():
-        print("API ready to serve predictions!")
-        app.run(host='0.0.0.0', port=5000, debug=True)
+        print("✓ API ready to serve predictions!")
+        print("Rate Limits:")
+        print("  - Global: 1000 requests/hour")
+        print("  - /predict: 20 requests/minute")
+        print("  - /batch_predict: 5 requests/minute")
+        
+        # Use debug mode from environment variable
+        debug_mode = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+        app.run(host='0.0.0.0', port=5000, debug=debug_mode)
     else:
-        print("Failed to load model. API will not start.")
+        print("✗ Failed to load model. API will not start.")
