@@ -1,0 +1,42 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment files (IMPORTANT - keep secrets out of git)
+.env
+.env.local
+.env.*.local
+
+# Convex local state
+.convex/
+
+# ML Model (Python)
+ml-model/__pycache__/
+ml-model/*.pyc
+ml-model/venv/
+ml-model/.env
+
+# Assets - ignore auto-generated files with long names
+assets/*cursor*
+assets/*workspaceStorage*
