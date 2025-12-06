@@ -15,12 +15,20 @@ def configure_cors(app):
     is_production = os.getenv("FLASK_ENV") == "production"
     
     if is_production:
-        # Production: Only allow specific domains
-        CORS(app, origins=[
-            "https://your-production-domain.com"  # Update with your production domain
-        ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
-        allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
-        supports_credentials=True)
+        # Production: Use allowed origins from environment variable
+        allowed_origins_str = os.getenv('ML_API_ALLOWED_ORIGINS', '')
+        if not allowed_origins_str:
+            raise ValueError("ML_API_ALLOWED_ORIGINS environment variable must be set in production")
+        
+        # Split comma-separated origins and strip whitespace
+        allowed_origins = [origin.strip() for origin in allowed_origins_str.split(',') if origin.strip()]
+        if not allowed_origins:
+            raise ValueError("ML_API_ALLOWED_ORIGINS must contain at least one origin")
+        
+        CORS(app, origins=allowed_origins,
+             methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+             allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+             supports_credentials=True)
     else:
         # Development: Allow localhost and local network IPs
         # This allows mobile testing on the same network
