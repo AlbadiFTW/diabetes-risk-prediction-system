@@ -7,6 +7,12 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Get the from email address from environment variable or use default
+function getFromEmail(): string {
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+  return `Diabetes Risk Prediction <${fromEmail}>`;
+}
+
 // Validate email format
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -21,11 +27,26 @@ export const sendVerificationEmail = action({
       return { success: false, error: "Invalid email address format" };
     }
 
+    // Check if Resend API key is configured
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not configured");
+      return { success: false, error: "Email service is not configured. Please contact support." };
+    }
+
     // Create verification code in database
-    const { code, expiresAt } = await ctx.runMutation(
-      api.emailVerification.createVerificationCode,
-      { email: args.email }
-    );
+    let code: string;
+    let expiresAt: number;
+    try {
+      const result = await ctx.runMutation(
+        api.emailVerification.createVerificationCode,
+        { email: args.email }
+      );
+      code = result.code;
+      expiresAt = result.expiresAt;
+    } catch (error: any) {
+      console.error("Failed to create verification code:", error);
+      return { success: false, error: `Failed to create verification code: ${error?.message || "Unknown error"}` };
+    }
 
     // Send email via Resend
     try {
@@ -83,13 +104,15 @@ export const sendVerificationEmail = action({
 
       if (error) {
         console.error("Resend error:", error);
-        return { success: false, error: "Failed to send email" };
+        const errorMessage = error.message || JSON.stringify(error) || "Failed to send email";
+        return { success: false, error: `Email sending failed: ${errorMessage}` };
       }
 
       return { success: true, messageId: data?.id };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Email sending error:", error);
-      return { success: false, error: "Failed to send verification email" };
+      const errorMessage = error?.message || error?.toString() || "Failed to send verification email";
+      return { success: false, error: `Email sending error: ${errorMessage}` };
     }
   },
 });
