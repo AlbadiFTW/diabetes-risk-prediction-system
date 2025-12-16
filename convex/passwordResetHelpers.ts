@@ -61,5 +61,32 @@ export const getCurrentUserId = mutation({
   },
 });
 
+// Mark password reset code as used (called after password is successfully reset)
+export const markPasswordResetCodeAsUsed = mutation({
+  args: {
+    email: v.string(),
+    code: v.string(),
+  },
+  handler: async (ctx, args): Promise<{ success: boolean }> => {
+    const verificationRecord = await ctx.db
+      .query("verificationCodes")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("used"), false),
+          q.eq(q.field("type"), "password_reset"),
+          q.eq(q.field("code"), args.code)
+        )
+      )
+      .first();
+
+    if (verificationRecord) {
+      await ctx.db.patch(verificationRecord._id, { used: true });
+    }
+
+    return { success: true };
+  },
+});
+
 
 

@@ -18,7 +18,7 @@ export const resetPassword = action({
       return { success: false, error: "Password must be at least 8 characters long" };
     }
 
-    // First verify the code
+    // First verify the code (without marking as used)
     const verifyResult: { success: boolean; error?: string } = await ctx.runMutation(
       api.emailVerification.verifyPasswordResetCode,
       { email: args.email, code: args.code }
@@ -26,6 +26,17 @@ export const resetPassword = action({
 
     if (!verifyResult.success) {
       return { success: false, error: verifyResult.error };
+    }
+
+    // Mark the code as used now that we're about to reset the password
+    // Get the verification record to mark it as used
+    const markUsedResult = await ctx.runMutation(api.passwordResetHelpers.markPasswordResetCodeAsUsed, {
+      email: args.email,
+      code: args.code,
+    });
+
+    if (!markUsedResult.success) {
+      return { success: false, error: "Failed to mark code as used. Please try again." };
     }
 
     // Get user by email

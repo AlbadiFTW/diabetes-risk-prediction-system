@@ -263,9 +263,11 @@ export const verifyPasswordResetCode = mutation({
       };
     }
 
-    // Code is valid - mark as used
-    await ctx.db.patch(verificationRecord._id, { used: true });
-
+    // Code is valid - but DON'T mark as used yet
+    // It will be marked as used in resetPassword after password is successfully changed
+    // This allows the code to be verified first (to show password form) 
+    // and then used again during password reset
+    
     return { success: true };
   },
 });
