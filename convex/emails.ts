@@ -7,20 +7,6 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Get the from email address from environment variable
-function getFromEmail(): string {
-  const fromEmail = process.env.RESEND_FROM_EMAIL;
-  if (!fromEmail) {
-    // Fallback for development, but warn in production
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error("RESEND_FROM_EMAIL environment variable must be set in production. Verify your domain at resend.com/domains and set RESEND_FROM_EMAIL to an email using your verified domain.");
-    }
-    // Development fallback
-    return "Diabetes Risk Prediction <onboarding@resend.dev>";
-  }
-  return fromEmail;
-}
-
 // Validate email format
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -44,7 +30,7 @@ export const sendVerificationEmail = action({
     // Send email via Resend
     try {
       const { data, error } = await resend.emails.send({
-        from: getFromEmail(),
+        from: "Diabetes Risk Prediction <onboarding@resend.dev>", // Use your domain after verifying
         to: args.email.trim(),
         subject: "Verify Your Email - Diabetes Risk Prediction System",
         html: `
@@ -125,7 +111,7 @@ export const sendSupportResponseEmail = action({
     // Send email via Resend
     try {
       const { data, error } = await resend.emails.send({
-        from: getFromEmail(),
+        from: "Diabetes Risk Prediction <onboarding@resend.dev>", // Use your domain after verifying
         to: args.email.trim(),
         subject: `Re: ${args.subject}`,
         html: `
@@ -227,7 +213,7 @@ export const sendPasswordResetEmail = action({
     // Send email via Resend
     try {
       const { data, error } = await resend.emails.send({
-        from: getFromEmail(),
+        from: "Diabetes Risk Prediction <onboarding@resend.dev>", // Use your domain after verifying
         to: args.email.trim(),
         subject: "Reset Your Password - Diabetes Risk Prediction System",
         html: `
@@ -321,7 +307,7 @@ export const sendAssessmentResultEmail = action({
 
     try {
       const { data, error } = await resend.emails.send({
-        from: getFromEmail(),
+        from: "Diabetes Risk Prediction <onboarding@resend.dev>",
         to: args.email.trim(),
         subject: `Your Diabetes Risk Assessment Results - ${args.riskScore.toFixed(1)}%`,
         html: `
@@ -437,7 +423,7 @@ export const sendAssignmentNotificationEmail = action({
 
     try {
       const { data, error } = await resend.emails.send({
-        from: getFromEmail(),
+        from: "Diabetes Risk Prediction <onboarding@resend.dev>",
         to: args.email.trim(),
         subject: subject,
         html: `
@@ -510,7 +496,7 @@ export const sendHighRiskAlertEmail = action({
 
     try {
       const { data, error } = await resend.emails.send({
-        from: getFromEmail(),
+        from: "Diabetes Risk Prediction <onboarding@resend.dev>",
         to: args.email.trim(),
         subject: `⚠️ High Risk Alert - ${args.riskScore.toFixed(1)}% Diabetes Risk`,
         html: `
@@ -592,7 +578,7 @@ export const sendNewMessageEmail = action({
 
     try {
       const { data, error } = await resend.emails.send({
-        from: getFromEmail(),
+        from: "Diabetes Risk Prediction <onboarding@resend.dev>",
         to: args.email.trim(),
         subject: `New message from ${args.senderName}`,
         html: `
@@ -668,7 +654,7 @@ export const sendMedicationReminderEmail = action({
 
     try {
       const { data, error } = await resend.emails.send({
-        from: getFromEmail(),
+        from: "Diabetes Risk Prediction <onboarding@resend.dev>",
         to: args.email.trim(),
         subject: `Medication Reminder: Time to take ${args.medicationName}`,
         html: `

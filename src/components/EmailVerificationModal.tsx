@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useAction, useQuery } from 'convex/react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../convex/_generated/api';
 import { Mail, X, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -15,6 +16,7 @@ export default function EmailVerificationModal({
   onClose, 
   onVerified 
 }: EmailVerificationModalProps) {
+  const { t } = useTranslation();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -38,12 +40,16 @@ export default function EmailVerificationModal({
   // Send initial email on mount
   useEffect(() => {
     if (email && email.includes('@')) {
-      handleSendCode();
+      // Small delay to ensure component is fully mounted
+      const timer = setTimeout(() => {
+        handleSendCode();
+      }, 100);
+      return () => clearTimeout(timer);
     } else {
-      setError('No email address available. Please contact support.');
+      setError(t("emailVerification.noEmailAvailable") || "No email address available. Please contact support.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [email]);
   
   // Countdown timer
   useEffect(() => {
@@ -64,7 +70,7 @@ export default function EmailVerificationModal({
     if (countdown > 0) return;
     
     if (!email || !email.includes('@')) {
-      setError('Invalid email address');
+      setError(t("emailVerification.invalidEmail"));
       return;
     }
     
@@ -75,11 +81,16 @@ export default function EmailVerificationModal({
       const result = await sendEmail({ email: email.trim() });
       if (result.success) {
         setCountdown(60); // 60 second cooldown
+        setError(''); // Clear any previous errors
       } else {
-        setError(result.error || 'Failed to send verification email');
+        const errorMessage = result.error || t("emailVerification.failedToSendEmail");
+        setError(errorMessage);
+        console.error("Failed to send verification email:", errorMessage);
       }
-    } catch (err) {
-      setError('Failed to send verification email');
+    } catch (err: any) {
+      const errorMessage = err?.message || err?.toString() || t("emailVerification.failedToSendEmail");
+      setError(errorMessage);
+      console.error("Error sending verification email:", err);
     } finally {
       setIsSending(false);
     }
@@ -127,12 +138,12 @@ export default function EmailVerificationModal({
     const verificationCode = codeString || code.join('');
     
     if (verificationCode.length !== 6) {
-      setError('Please enter all 6 digits');
+      setError(t("emailVerification.enterAllDigits"));
       return;
     }
     
     if (!email || !email.includes('@')) {
-      setError('Invalid email address');
+      setError(t("emailVerification.invalidEmail"));
       return;
     }
     
@@ -145,20 +156,20 @@ export default function EmailVerificationModal({
       if (result.success) {
         setSuccess(true);
         // Show success toast
-        toast.success('Email verified successfully!', {
-          description: 'You now have full access to all features.',
+        toast.success(t("emailVerification.emailVerifiedSuccess"), {
+          description: t("emailVerification.fullAccess"),
           duration: 3000,
         });
         setTimeout(() => {
           onVerified();
         }, 1500);
       } else {
-        setError(result.error || 'Verification failed');
+        setError(result.error || t("emailVerification.verificationFailed"));
         setCode(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
       }
     } catch (err) {
-      setError('Verification failed. Please try again.');
+      setError(t("emailVerification.verificationFailedDesc"));
     } finally {
       setIsLoading(false);
     }
@@ -179,9 +190,9 @@ export default function EmailVerificationModal({
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
             <Mail className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white">Verify Your Email</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">{t("emailVerification.verifyYourEmail")}</h2>
           <p className="text-blue-100 mt-2 text-xs sm:text-sm">
-            We sent a code to <span className="font-medium">{email}</span>
+            {t("emailVerification.codeSentTo")} <span className="font-medium">{email}</span>
           </p>
         </div>
         
@@ -192,21 +203,21 @@ export default function EmailVerificationModal({
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                 <CheckCircle className="w-10 h-10 text-green-600" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">🎉 Email Verified Successfully!</h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-4">Your email address has been verified.</p>
-              <p className="text-sm text-gray-500">You now have full access to all features.</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t("emailVerification.emailVerifiedSuccess")}</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-4">{t("emailVerification.emailVerifiedDesc")}</p>
+              <p className="text-sm text-gray-500">{t("emailVerification.fullAccess")}</p>
               <div className="mt-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg">
                   <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-700">Verification Complete</span>
+                  <span className="text-sm font-medium text-green-700">{t("emailVerification.verificationComplete")}</span>
                 </div>
               </div>
-              <p className="text-xs text-gray-400 mt-4">Redirecting you now...</p>
+              <p className="text-xs text-gray-400 mt-4">{t("emailVerification.redirecting")}</p>
             </div>
           ) : (
             <>
               <p className="text-center text-gray-600 mb-6">
-                Enter the 6-digit code to verify your email address
+                {t("emailVerification.enter6DigitCode")}
               </p>
               
               {/* Code Input */}
@@ -246,16 +257,16 @@ export default function EmailVerificationModal({
                 {isLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Verifying...
+                    {t("emailVerification.verifying")}
                   </>
                 ) : (
-                  'Verify Email'
+                  t("emailVerification.verifyEmailButton")
                 )}
               </button>
               
               {/* Resend Code */}
               <div className="text-center mt-4">
-                <p className="text-sm text-gray-500 mb-2">Didn't receive the code?</p>
+                <p className="text-sm text-gray-500 mb-2">{t("emailVerification.didntReceiveCode")}</p>
                 <button
                   onClick={handleSendCode}
                   disabled={isSending || countdown > 0}
@@ -264,14 +275,14 @@ export default function EmailVerificationModal({
                   {isSending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Sending...
+                      {t("emailVerification.sending")}
                     </>
                   ) : countdown > 0 ? (
-                    `Resend code in ${countdown}s`
+                    t("emailVerification.resendCodeIn", { seconds: countdown })
                   ) : (
                     <>
                       <RefreshCw className="w-4 h-4" />
-                      Resend Code
+                      {t("emailVerification.resendCode")}
                     </>
                   )}
                 </button>
