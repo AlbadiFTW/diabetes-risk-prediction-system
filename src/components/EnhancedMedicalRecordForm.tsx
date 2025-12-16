@@ -4,7 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { Loader2, AlertCircle, CheckCircle, TrendingUp, Shield, Heart, Info, ClipboardList, Sparkles, Lightbulb, Calendar, Mail } from "lucide-react";
-import { mlApiClient, MLPredictionRequest, MLPredictionResponse } from "../utils/mlApiClient";
+import { MLPredictionResponse } from "../utils/mlApiClient";
 import { useEmailVerification } from "../hooks/useEmailVerification";
 import EmailVerificationModal from "./EmailVerificationModal";
 import { toast } from "sonner";
@@ -40,6 +40,7 @@ const normalizeRiskCategory = (category: string): "low" | "moderate" | "high" | 
 export function EnhancedMedicalRecordForm({ patientId, onSuccess }: EnhancedMedicalRecordFormProps) {
   const { isVerified, isLoading: isVerificationLoading, email } = useEmailVerification();
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const callMLAPIAction = useAction(api.predictions.callMLAPI);
   
   const [formData, setFormData] = useState({
     recordType: "baseline" as "baseline" | "followup" | "emergency",
@@ -437,7 +438,7 @@ export function EnhancedMedicalRecordForm({ patientId, onSuccess }: EnhancedMedi
     const pregnanciesValue =
       shouldShowPregnancies && data.pregnancies ? parseInt(data.pregnancies, 10) : 0;
 
-    const requestData: MLPredictionRequest = {
+    const requestData = {
       age: parseInt(data.age, 10),
       bmi: data.bmi,
       glucose: parseFloat(data.glucoseLevel),
@@ -458,7 +459,7 @@ export function EnhancedMedicalRecordForm({ patientId, onSuccess }: EnhancedMedi
       diabetesStatus: patientProfile?.diabetesStatus || "none",
     };
 
-    return await mlApiClient.predictRisk(requestData);
+    return await callMLAPIAction(requestData);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
