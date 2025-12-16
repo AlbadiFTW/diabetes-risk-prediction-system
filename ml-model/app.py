@@ -690,6 +690,12 @@ def ratelimit_handler(e):
         'retry_after': e.get_retry_after() if hasattr(e, 'get_retry_after') else None
     }), 429
 
+# Load model on module import (for gunicorn)
+# This ensures the model is loaded when the app starts, not just when running directly
+# Must be called AFTER load_model() function is defined
+print("Initializing application and loading model...")
+load_model()
+
 if __name__ == '__main__':
     print("Starting Diabetes Risk Prediction API...")
     print(f"Environment: {os.getenv('FLASK_ENV', 'development')}")
