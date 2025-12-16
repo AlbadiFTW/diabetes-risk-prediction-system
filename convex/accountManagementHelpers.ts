@@ -72,7 +72,8 @@ export const getPasswordHash = mutation({
       return { passwordHash: null };
     }
 
-    return { passwordHash: (passwordAccount as any).passwordHash || null };
+    // Convex Auth Password provider stores the password hash in the 'secret' field
+    return { passwordHash: (passwordAccount as any).secret || null };
   },
 });
 

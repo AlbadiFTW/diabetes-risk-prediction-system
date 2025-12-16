@@ -22,9 +22,10 @@ export const updatePasswordHash = mutation({
     }
 
     // Update the password hash in the auth account
+    // Convex Auth Password provider stores the password hash in the 'secret' field
     await ctx.db.patch(passwordAccount._id, {
-      passwordHash: args.hashedPassword,
-    } as any);
+      secret: args.hashedPassword,
+    });
 
     return { success: true };
   },
