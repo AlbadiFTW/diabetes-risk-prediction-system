@@ -23,9 +23,16 @@ export const updatePasswordHash = mutation({
 
     // Update the password hash in the auth account
     // Convex Auth Password provider stores the password hash in the 'secret' field
+    // We need to ensure the hash is properly formatted for Convex Auth
     await ctx.db.patch(passwordAccount._id, {
       secret: args.hashedPassword,
     });
+
+    // Verify the update was successful by reading it back
+    const updatedAccount = await ctx.db.get(passwordAccount._id);
+    if (!updatedAccount || (updatedAccount as any).secret !== args.hashedPassword) {
+      return { success: false, error: "Failed to update password. Please try again." };
+    }
 
     return { success: true };
   },
