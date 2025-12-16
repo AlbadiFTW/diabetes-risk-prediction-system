@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery, useAction } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { X, Lock, Mail, ArrowRight, Loader2 } from "lucide-react";
@@ -12,6 +13,7 @@ interface PasswordResetModalProps {
 }
 
 export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: PasswordResetModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<"email" | "code" | "password">("email");
   const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState(['', '', '', '', '', '']);
@@ -74,7 +76,7 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
   const handleSendCode = async () => {
     if (countdown > 0) return;
     if (!email || !email.includes('@')) {
-      setError('Please enter a valid email address');
+      setError(t("passwordReset.enterValidEmail"));
       return;
     }
 
@@ -83,14 +85,14 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
     try {
       const result = await sendPasswordResetEmail({ email });
       if (result.success) {
-        toast.success("Password reset code sent to your email");
+        toast.success(t("passwordReset.passwordResetCodeSent"));
         setStep("code");
         setCountdown(60); // 1 minute cooldown
       } else {
-        setError(result.error || "Failed to send code");
+        setError(result.error || t("passwordReset.failedToSendCode"));
       }
     } catch (error: any) {
-      setError(error.message || "Failed to send password reset code");
+      setError(error.message || t("passwordReset.failedToSendCode"));
     } finally {
       setIsSending(false);
     }
@@ -99,7 +101,7 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
   const handleVerifyCode = async () => {
     const codeString = code.join('');
     if (codeString.length !== 6) {
-      setError('Please enter the complete 6-digit code');
+      setError(t("passwordReset.enterCompleteCode"));
       return;
     }
 
@@ -111,10 +113,10 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
         setStep("password");
         setError("");
       } else {
-        setError(result.error || "Invalid code");
+        setError(result.error || t("passwordReset.invalidCode"));
       }
     } catch (error: any) {
-      setError(error.message || "Failed to verify code");
+      setError(error.message || t("passwordReset.invalidCode"));
     } finally {
       setIsLoading(false);
     }
@@ -122,11 +124,11 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
 
   const handleResetPassword = async () => {
     if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters long');
+      setError(t("passwordReset.passwordMinLength"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t("passwordReset.passwordsDoNotMatch"));
       return;
     }
 
@@ -140,13 +142,13 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
         newPassword 
       });
       if (result.success) {
-        toast.success("Password reset successfully! You can now sign in.");
+        toast.success(t("passwordReset.passwordResetSuccess"));
         handleClose();
       } else {
-        setError(result.error || "Failed to reset password");
+        setError(result.error || t("passwordReset.failedToReset"));
       }
     } catch (error: any) {
-      setError(error.message || "Failed to reset password");
+      setError(error.message || t("passwordReset.failedToReset"));
     } finally {
       setIsLoading(false);
     }
@@ -175,11 +177,11 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
               <Lock className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Reset Password</h2>
+              <h2 className="text-xl font-bold text-white">{t("passwordReset.resetPassword")}</h2>
               <p className="text-sm text-[#B9BBBE]">
-                {step === "email" && "Enter your email address"}
-                {step === "code" && "Enter the verification code"}
-                {step === "password" && "Enter your new password"}
+                {step === "email" && t("passwordReset.enterEmail")}
+                {step === "code" && t("passwordReset.enterCode")}
+                {step === "password" && t("passwordReset.enterNewPassword")}
               </p>
             </div>
           </div>
@@ -204,7 +206,7 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
             <>
               <div>
                 <label className="block text-sm font-medium text-[#B9BBBE] mb-2">
-                  Email Address
+                  {t("passwordReset.emailAddress")}
                 </label>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9BBBE]">
@@ -214,7 +216,7 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your.email@example.com"
+                    placeholder={t("passwordReset.emailAddress")}
                     className="w-full pl-12 pr-4 py-3 bg-[#202225] border border-[#202225] rounded-lg text-white placeholder-[#72767D] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -232,14 +234,14 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
                 {isSending ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Sending...</span>
+                    <span>{t("passwordReset.sending")}</span>
                   </>
                 ) : countdown > 0 ? (
-                  <span>Resend in {countdown}s</span>
+                  <span>{t("passwordReset.resendIn", { seconds: countdown })}</span>
                 ) : (
                   <>
-                    <span>Send Reset Code</span>
-                    <ArrowRight className="w-5 h-5" />
+                    <span>{t("passwordReset.sendResetCode")}</span>
+                    <ArrowRight className="w-5 h-5" data-flip-on-rtl="true" />
                   </>
                 )}
               </button>
@@ -251,7 +253,7 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
             <>
               <div>
                 <p className="text-sm text-[#B9BBBE] mb-4 text-center">
-                  Enter the 6-digit code sent to <strong className="text-white">{email}</strong>
+                  {t("passwordReset.codeSentTo")} <strong className="text-white">{email}</strong>
                 </p>
                 <div className="flex gap-2 justify-center">
                   {code.map((digit, index) => (
@@ -277,12 +279,12 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
                 {isLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Verifying...</span>
+                    <span>{t("passwordReset.verifying")}</span>
                   </>
                 ) : (
                   <>
-                    <span>Verify Code</span>
-                    <ArrowRight className="w-5 h-5" />
+                    <span>{t("passwordReset.verifyCode")}</span>
+                    <ArrowRight className="w-5 h-5" data-flip-on-rtl="true" />
                   </>
                 )}
               </button>
@@ -291,7 +293,7 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
                 disabled={countdown > 0}
                 className="w-full py-2 text-sm text-[#B9BBBE] hover:text-white transition-colors"
               >
-                {countdown > 0 ? `Resend code in ${countdown}s` : "Resend code"}
+                {countdown > 0 ? t("passwordReset.resendCodeIn", { seconds: countdown }) : t("passwordReset.resendCode")}
               </button>
             </>
           )}
@@ -301,7 +303,7 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
             <>
               <div>
                 <label className="block text-sm font-medium text-[#B9BBBE] mb-2">
-                  New Password
+                  {t("passwordReset.newPassword")}
                 </label>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9BBBE]">
@@ -311,14 +313,14 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new password (min. 8 characters)"
+                    placeholder={t("passwordReset.enterNewPasswordPlaceholder")}
                     className="w-full pl-12 pr-4 py-3 bg-[#202225] border border-[#202225] rounded-lg text-white placeholder-[#72767D] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
                   />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#B9BBBE] mb-2">
-                  Confirm Password
+                  {t("passwordReset.confirmPassword")}
                 </label>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9BBBE]">
@@ -328,7 +330,7 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm new password"
+                    placeholder={t("passwordReset.confirmNewPassword")}
                     className="w-full pl-12 pr-4 py-3 bg-[#202225] border border-[#202225] rounded-lg text-white placeholder-[#72767D] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -346,12 +348,12 @@ export function PasswordResetModal({ isOpen, onClose, initialEmail = "" }: Passw
                 {isLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Resetting...</span>
+                    <span>{t("passwordReset.resetting")}</span>
                   </>
                 ) : (
                   <>
-                    <span>Reset Password</span>
-                    <ArrowRight className="w-5 h-5" />
+                    <span>{t("passwordReset.resetPasswordButton")}</span>
+                    <ArrowRight className="w-5 h-5" data-flip-on-rtl="true" />
                   </>
                 )}
               </button>

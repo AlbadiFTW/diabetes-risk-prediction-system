@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from 'convex/react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../convex/_generated/api';
 import { Mail, X } from 'lucide-react';
 import EmailVerificationModal from './EmailVerificationModal';
@@ -9,6 +10,7 @@ interface EmailVerificationBannerProps {
 }
 
 export default function EmailVerificationBanner({ onVerified }: EmailVerificationBannerProps) {
+  const { t } = useTranslation();
   const verificationStatus = useQuery(api.emailVerification.isEmailVerified);
   const [showModal, setShowModal] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -33,8 +35,8 @@ export default function EmailVerificationBanner({ onVerified }: EmailVerificatio
                 <Mail className="w-5 h-5 text-amber-600" />
               </div>
               <p className="text-sm text-amber-800">
-                <span className="font-medium">Verify your email</span>
-                <span className="hidden sm:inline"> to access all features including health assessments.</span>
+                <span className="font-medium">{t("emailVerification.verifyEmail")}</span>
+                <span className="hidden sm:inline"> {t("emailVerification.verifyEmailDesc")}</span>
               </p>
             </div>
             
@@ -43,12 +45,12 @@ export default function EmailVerificationBanner({ onVerified }: EmailVerificatio
                 onClick={() => setShowModal(true)}
                 className="px-4 py-1.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition"
               >
-                Verify Now
+                {t("emailVerification.verifyNow")}
               </button>
               <button
                 onClick={() => setDismissed(true)}
                 className="p-1.5 text-amber-600 hover:bg-amber-100 rounded-lg transition"
-                aria-label="Dismiss"
+                aria-label={t("emailVerification.dismiss")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -70,6 +72,16 @@ export default function EmailVerificationBanner({ onVerified }: EmailVerificatio
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -3,9 +3,9 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { api } from "./_generated/api";
-import bcrypt from "bcryptjs";
+import { Scrypt } from "lucia";
 
-// Reset password using verification code (action that uses Node.js for bcrypt)
+// Reset password using verification code (action that uses Node.js for Scrypt)
 export const resetPassword = action({
   args: {
     email: v.string(),
@@ -37,8 +37,9 @@ export const resetPassword = action({
       return { success: false, error: "User not found" };
     }
 
-    // Hash the new password (using Node.js bcrypt)
-    const hashedPassword = await bcrypt.hash(args.newPassword, 10);
+    // Hash the new password using Scrypt (same as Convex Auth's default)
+    const scrypt = new Scrypt();
+    const hashedPassword = await scrypt.hash(args.newPassword);
 
     // Update the password hash using mutation
     const updateResult = await ctx.runMutation(api.passwordResetHelpers.updatePasswordHash, {

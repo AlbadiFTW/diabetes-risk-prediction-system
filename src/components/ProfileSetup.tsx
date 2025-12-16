@@ -2,12 +2,14 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { ArrowLeft, X } from "lucide-react";
 import { PhoneNumberInput } from "./PhoneNumberInput";
 import { useEmailVerification } from "../hooks/useEmailVerification";
 
 export function ProfileSetup() {
+  const { t } = useTranslation();
   const { signOut } = useAuthActions();
   const cancelAccountCreation = useMutation(api.users.cancelAccountCreation);
   const { email } = useEmailVerification();
@@ -39,25 +41,25 @@ export function ProfileSetup() {
     
     // Prevent guest users from creating profiles
     if (isGuest) {
-      toast.error("Guest users cannot create profiles. Please register with an email to save your data.");
+      toast.error(t("profileSetup.guestCannotCreateProfile"));
       return;
     }
     
     if (!role || !firstName || !lastName) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("profileSetup.fillRequiredFields"));
       return;
     }
 
     // Phone validation is handled by PhoneNumberInput component
     if (!phoneNumber) {
-      setPhoneError("Phone number is required");
-      toast.error("Please provide a valid phone number");
+      setPhoneError(t("profileSetup.phoneRequired"));
+      toast.error(t("profileSetup.phoneRequired"));
       return;
     }
 
     // Diabetes status is mandatory for patients
     if (role === "patient" && !diabetesStatus) {
-      toast.error("Please select your diabetes status");
+      toast.error(t("profileSetup.selectDiabetesStatus"));
       return;
     }
 
@@ -76,15 +78,15 @@ export function ProfileSetup() {
         assignedDoctorId: role === "patient" && assignedDoctorId ? assignedDoctorId as any : undefined,
         emergencyContact: role === "patient" && emergencyContact ? emergencyContact : undefined,
         emergencyContactCountryCode: role === "patient" ? emergencyContactCountryCode : undefined,
-        diabetesStatus: role === "patient" ? diabetesStatus : undefined,
+        diabetesStatus: role === "patient" ? (diabetesStatus || undefined) : undefined,
         diabetesDiagnosisDate: role === "patient" && diabetesStatus && diabetesStatus !== "none" && diabetesDiagnosisDate 
           ? new Date(diabetesDiagnosisDate).getTime() 
           : undefined,
       });
       
-      toast.success("Profile created successfully!");
+      toast.success(t("profileSetup.profileCreatedSuccess"));
     } catch (error) {
-      toast.error("Failed to create profile");
+      toast.error(t("profileSetup.failedToCreateProfile"));
       console.error(error);
     }
   };
@@ -95,7 +97,7 @@ export function ProfileSetup() {
       await cancelAccountCreation({});
       // Sign out the user
       await signOut();
-      toast.success("Account creation cancelled. Your account has been deleted.");
+      toast.success(t("profileSetup.accountCreationCancelled"));
     } catch (error: any) {
       console.error("Cancel error:", error);
       // Even if deletion fails, still try to sign out
@@ -104,7 +106,7 @@ export function ProfileSetup() {
       } catch (signOutError) {
         console.error("Sign out error:", signOutError);
       }
-      toast.error(error?.message || "Failed to cancel. Please try again.");
+      toast.error(error?.message || t("profileSetup.failedToCancel"));
     }
   };
 
@@ -123,23 +125,22 @@ export function ProfileSetup() {
       {showCancelConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Cancel Account Creation?</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{t("profileSetup.cancelAccountCreation")}</h3>
             <p className="text-gray-600 mb-6">
-              If you cancel, you'll be signed out and will need to create a new account to continue. 
-              Any information you've entered will be lost.
+              {t("profileSetup.cancelAccountDesc")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCancelConfirm(false)}
                 className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
               >
-                Continue Setup
+                {t("profileSetup.continueSetup")}
               </button>
               <button
                 onClick={handleCancel}
                 className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
               >
-                Yes, Cancel
+                {t("profileSetup.yesCancel")}
               </button>
             </div>
           </div>
@@ -154,23 +155,23 @@ export function ProfileSetup() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h2 className="text-2xl font-bold text-gray-900">Complete Your Profile</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t("profileSetup.completeProfile")}</h2>
       </div>
       
       <p className="text-gray-600 mb-6 text-sm">
-        You're almost done! Please provide the following information to complete your account setup.
+        {t("profileSetup.almostDone")}
       </p>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Role Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            I am a *
+            {t("profileSetup.iamA")}
           </label>
           {isGuest ? (
             <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <span className="text-sm text-amber-800 font-medium">Guest User - Patient</span>
-              <span className="text-xs text-amber-600">(Guest users can only access as patients)</span>
+              <span className="text-sm text-amber-800 font-medium">{t("profileSetup.guestUserPatient")}</span>
+              <span className="text-xs text-amber-600">{t("profileSetup.guestUsersOnlyPatients")}</span>
             </div>
           ) : (
             <div className="flex gap-4">
@@ -182,7 +183,7 @@ export function ProfileSetup() {
                   onChange={(e) => setRole(e.target.value as "patient")}
                   className="mr-2"
                 />
-                Patient
+                {t("profileSetup.patient")}
               </label>
               <label className="flex items-center">
                 <input
@@ -192,7 +193,7 @@ export function ProfileSetup() {
                   onChange={(e) => setRole(e.target.value as "doctor")}
                   className="mr-2"
                 />
-                Healthcare Provider
+                {t("profileSetup.healthcareProvider")}
               </label>
             </div>
           )}
@@ -202,7 +203,7 @@ export function ProfileSetup() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              First Name *
+              {t("profileSetup.firstName")}
             </label>
             <input
               type="text"
@@ -214,7 +215,7 @@ export function ProfileSetup() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Last Name *
+              {t("profileSetup.lastName")}
             </label>
             <input
               type="text"
@@ -229,7 +230,7 @@ export function ProfileSetup() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date of Birth
+              {t("profileSetup.dateOfBirth")}
             </label>
             <input
               type="date"
@@ -240,16 +241,16 @@ export function ProfileSetup() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Gender
+              {t("profileSetup.gender")}
             </label>
             <select
               value={gender}
               onChange={(e) => setGender(e.target.value as "male" | "female")}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
+              <option value="">{t("profileSetup.selectGender")}</option>
+              <option value="male">{t("profileSetup.male")}</option>
+              <option value="female">{t("profileSetup.female")}</option>
             </select>
           </div>
         </div>
@@ -266,13 +267,13 @@ export function ProfileSetup() {
             setPhoneError(null);
           }}
           error={phoneError}
-          label="Phone Number"
+          label={t("profileSetup.phoneNumber")}
           required
         />
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Address
+            {t("profileSetup.address")}
           </label>
           <textarea
             value={address}
@@ -287,7 +288,7 @@ export function ProfileSetup() {
           <>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Medical License Number
+                {t("profileSetup.medicalLicenseNumber")}
               </label>
               <input
                 type="text"
@@ -298,13 +299,13 @@ export function ProfileSetup() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Specialization
+                {t("profileSetup.specialization")}
               </label>
               <input
                 type="text"
                 value={specialization}
                 onChange={(e) => setSpecialization(e.target.value)}
-                placeholder="e.g., Endocrinology, Internal Medicine"
+                placeholder={t("profileSetup.specializationPlaceholder")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -316,14 +317,14 @@ export function ProfileSetup() {
           <>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Assigned Doctor
+                {t("profileSetup.assignedDoctor")}
               </label>
               <select
                 value={assignedDoctorId}
                 onChange={(e) => setAssignedDoctorId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select a doctor (optional)</option>
+                <option value="">{t("profileSetup.selectDoctorOptional")}</option>
                 {doctors?.map((doctor) => (
                   <option key={doctor._id} value={doctor.userId}>
                     Dr. {doctor.firstName} {doctor.lastName}
@@ -344,12 +345,12 @@ export function ProfileSetup() {
                 setEmergencyContactError(null);
               }}
               error={emergencyContactError}
-              label="Emergency Contact Phone"
+              label={t("profileSetup.emergencyContactPhone")}
               required={false}
             />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Diabetes Status <span className="text-red-500">*</span>
+                {t("profileSetup.diabetesStatusRequired")}
               </label>
               <select
                 value={diabetesStatus}
@@ -357,22 +358,22 @@ export function ProfileSetup() {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">-- Please select --</option>
-                <option value="none">No Diabetes (Risk Assessment)</option>
-                <option value="prediabetic">Pre-diabetes</option>
-                <option value="type1">Type 1 Diabetes</option>
-                <option value="type2">Type 2 Diabetes</option>
-                <option value="gestational">Gestational Diabetes</option>
-                <option value="other">Other</option>
+                <option value="">{t("profileSetup.selectDiabetesStatus")}</option>
+                <option value="none">{t("profileSetup.noDiabetes")}</option>
+                <option value="prediabetic">{t("profileSetup.prediabetes")}</option>
+                <option value="type1">{t("profileSetup.type1Diabetes")}</option>
+                <option value="type2">{t("profileSetup.type2Diabetes")}</option>
+                <option value="gestational">{t("profileSetup.gestationalDiabetes")}</option>
+                <option value="other">{t("profileSetup.other")}</option>
               </select>
               <p className="mt-1 text-xs text-gray-500">
-                <span className="text-red-500">Required.</span> Select your current diabetes status. This helps us provide appropriate recommendations.
+                {t("profileSetup.diabetesStatusHelp")}
               </p>
             </div>
             {diabetesStatus !== "none" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Diagnosis Date
+                  {t("profileSetup.diagnosisDate")}
                 </label>
                 <input
                   type="date"
@@ -381,7 +382,7 @@ export function ProfileSetup() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  When were you diagnosed? (Optional)
+                  {t("profileSetup.diagnosisDateHelp")}
                 </p>
               </div>
             )}
@@ -394,13 +395,13 @@ export function ProfileSetup() {
             onClick={() => setShowCancelConfirm(true)}
             className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium transition-colors"
           >
-            Cancel
+            {t("profileSetup.cancel")}
           </button>
           <button
             type="submit"
             className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-colors"
           >
-            Complete Profile Setup
+            {t("profileSetup.completeProfileSetup")}
           </button>
         </div>
       </form>

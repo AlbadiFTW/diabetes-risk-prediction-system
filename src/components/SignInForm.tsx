@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { Logo } from "./Logo";
 import { Mail, Lock, Sparkles, ArrowRight, UserPlus, FileText, HelpCircle, Eye, EyeOff } from "lucide-react";
 import { TermsModal } from "./TermsModal";
@@ -13,6 +14,7 @@ import { TwoFactorVerificationModal } from "./TwoFactorVerificationModal";
 import type { Id } from "../../convex/_generated/dataModel";
 
 export function SignInForm() {
+  const { t } = useTranslation();
   const { signIn } = useAuthActions();
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [submitting, setSubmitting] = useState(false);
@@ -38,7 +40,7 @@ export function SignInForm() {
     
     // Check terms acceptance for signup
     if (flow === "signUp" && !acceptedTerms) {
-      toast.error("Please accept the Terms of Service and Privacy Policy to continue");
+      toast.error(t("auth.acceptTermsError"));
       return;
     }
     
@@ -61,35 +63,35 @@ export function SignInForm() {
       if (flow === "signIn") {
         // Sign in errors
         if (lowerError.includes("invalid password") || lowerError.includes("incorrect password")) {
-          toastTitle = "Incorrect password";
-          toastDescription = "The password you entered is incorrect. Please try again.";
+          toastTitle = t("auth.incorrectPassword");
+          toastDescription = t("auth.incorrectPasswordDesc");
         } else if (lowerError.includes("user not found") || lowerError.includes("account not found") || lowerError.includes("no account")) {
-          toastTitle = "Account not found";
-          toastDescription = "No account exists with this email address. Did you mean to sign up?";
+          toastTitle = t("auth.accountNotFound");
+          toastDescription = t("auth.accountNotFoundDesc");
         } else if (lowerError.includes("email") && (lowerError.includes("not found") || lowerError.includes("does not exist"))) {
-          toastTitle = "Email not found";
-          toastDescription = "This email address is not registered. Please sign up to create an account.";
+          toastTitle = t("auth.emailNotFound");
+          toastDescription = t("auth.emailNotFoundDesc");
         } else if (lowerError.includes("already exists") || lowerError.includes("already registered")) {
-          toastTitle = "Account already exists";
-          toastDescription = "An account with this email already exists. Please sign in instead.";
+          toastTitle = t("auth.accountExists");
+          toastDescription = t("auth.accountExistsDesc");
         } else {
-          toastTitle = "Sign in failed";
-          toastDescription = "Unable to sign in. Please check your email and password, or sign up if you don't have an account.";
+          toastTitle = t("auth.signInFailed");
+          toastDescription = t("auth.signInFailedDesc");
         }
       } else {
         // Sign up errors
         if (lowerError.includes("already exists") || lowerError.includes("already registered") || lowerError.includes("user already")) {
-          toastTitle = "Account already exists";
-          toastDescription = "An account with this email already exists. Please sign in instead.";
+          toastTitle = t("auth.accountExists");
+          toastDescription = t("auth.accountExistsDesc");
         } else if (lowerError.includes("password") && (lowerError.includes("weak") || lowerError.includes("invalid") || lowerError.includes("too short"))) {
-          toastTitle = "Password too weak";
-          toastDescription = "Please choose a stronger password (at least 8 characters).";
+          toastTitle = t("auth.passwordTooWeak");
+          toastDescription = t("auth.passwordTooWeakDesc");
         } else if (lowerError.includes("email") && (lowerError.includes("invalid") || lowerError.includes("format"))) {
-          toastTitle = "Invalid email";
-          toastDescription = "Please enter a valid email address.";
+          toastTitle = t("auth.invalidEmail");
+          toastDescription = t("auth.invalidEmailDesc");
         } else {
-          toastTitle = "Sign up failed";
-          toastDescription = "Unable to create your account. Please try again or contact support if the problem persists.";
+          toastTitle = t("auth.signUpFailed");
+          toastDescription = t("auth.signUpFailedDesc");
         }
       }
       
@@ -128,12 +130,12 @@ export function SignInForm() {
               <Logo size="lg" showText={false} />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">
-              {flow === "signIn" ? "Welcome back!" : "Create your account"}
+              {flow === "signIn" ? t("auth.welcomeBack") : t("auth.createAccount")}
             </h2>
             <p className="text-[#B9BBBE] text-sm">
               {flow === "signIn"
-                ? "We're so excited to see you again!"
-                : "Join us to start your health journey"}
+                ? t("auth.excitedToSeeYou")
+                : t("auth.joinHealthJourney")}
             </p>
           </div>
 
@@ -149,7 +151,7 @@ export function SignInForm() {
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
+                placeholder={t("auth.email")}
                 required
                 className="w-full pl-12 pr-4 py-3 bg-[#202225] border border-[#202225] rounded-lg text-white placeholder-[#72767D] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
               />
@@ -165,7 +167,7 @@ export function SignInForm() {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
+                placeholder={t("auth.password")}
                 required
                 className="w-full pl-12 pr-20 py-3 bg-[#202225] border border-[#202225] rounded-lg text-white placeholder-[#72767D] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
               />
@@ -174,7 +176,7 @@ export function SignInForm() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="text-[#B9BBBE] hover:text-white transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -188,7 +190,7 @@ export function SignInForm() {
                     onClick={() => setShowPasswordResetModal(true)}
                     className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors whitespace-nowrap"
                   >
-                    Forgot?
+                    {t("auth.forgotPassword")}
                   </button>
                 )}
               </div>
@@ -205,7 +207,7 @@ export function SignInForm() {
                     className="mt-1 w-4 h-4 rounded border-[#202225] bg-[#202225] text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-offset-[#2F3136] cursor-pointer"
                   />
                   <span className="text-sm text-[#B9BBBE] group-hover:text-white transition-colors">
-                    I agree to the{" "}
+                    {t("auth.termsAgreement")}{" "}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -215,13 +217,13 @@ export function SignInForm() {
                       className="text-indigo-400 hover:text-indigo-300 font-medium underline inline-flex items-center gap-1"
                     >
                       <FileText className="w-3 h-3" />
-                      Terms of Service and Privacy Policy
+                      {t("auth.termsAndPrivacy")}
                     </button>
                   </span>
                 </label>
                 {!acceptedTerms && (
                   <p className="text-xs text-amber-400 ml-7">
-                    You must accept the terms to create an account
+                    {t("auth.mustAcceptTerms")}
                   </p>
                 )}
               </div>
@@ -236,12 +238,12 @@ export function SignInForm() {
               {submitting ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Please wait...</span>
+                  <span>{t("common.pleaseWait")}</span>
                 </>
               ) : (
                 <>
-                  <span>{flow === "signIn" ? "Sign in" : "Sign up"}</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <span>{flow === "signIn" ? t("auth.signIn") : t("auth.signUp")}</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" data-flip-on-rtl="true" />
                 </>
               )}
             </button>
@@ -257,18 +259,18 @@ export function SignInForm() {
                   <>
                     <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span>
-                      Need an account?{" "}
+                      {t("auth.needAccount")}{" "}
                       <span className="text-indigo-400 hover:text-indigo-300 font-medium">
-                        Register
+                        {t("auth.register")}
                       </span>
                     </span>
                   </>
                 ) : (
                   <>
                     <span>
-                      Already have an account?{" "}
+                      {t("auth.alreadyHaveAccount")}{" "}
                       <span className="text-indigo-400 hover:text-indigo-300 font-medium">
-                        Sign in
+                        {t("auth.signIn")}
                       </span>
                     </span>
                   </>
@@ -283,7 +285,7 @@ export function SignInForm() {
               <div className="w-full border-t border-[#202225]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-[#2F3136] text-[#72767D]">or</span>
+              <span className="px-4 bg-[#2F3136] text-[#72767D]">{t("common.or")}</span>
             </div>
           </div>
 
@@ -293,7 +295,7 @@ export function SignInForm() {
             className="w-full py-3 bg-[#202225] hover:bg-[#2A2D31] border border-[#202225] hover:border-[#3A3D42] rounded-lg text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 group"
           >
             <Sparkles className="w-5 h-5 text-indigo-400 group-hover:rotate-12 transition-transform" />
-            <span>Continue as Guest</span>
+            <span>{t("auth.continueAsGuest")}</span>
           </button>
 
           {/* Support Button */}
@@ -303,7 +305,7 @@ export function SignInForm() {
             className="w-full mt-3 py-2.5 text-sm text-[#B9BBBE] hover:text-white transition-colors flex items-center justify-center gap-2 group"
           >
             <HelpCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            <span>Need help? Contact Support</span>
+            <span>{t("auth.needHelp")}</span>
           </button>
         </div>
       </div>
@@ -311,13 +313,13 @@ export function SignInForm() {
       {/* Footer Text */}
       {flow === "signIn" && (
         <p className="text-center mt-6 text-[#72767D] text-sm">
-          By continuing, you agree to our{" "}
+          {t("auth.byContinuing")}{" "}
           <button
             type="button"
             onClick={() => setShowTermsModal(true)}
             className="text-indigo-400 hover:text-indigo-300 underline"
           >
-            Terms of Service and Privacy Policy
+            {t("auth.termsAndPrivacy")}
           </button>
         </p>
       )}

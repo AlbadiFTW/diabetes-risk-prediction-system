@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../convex/_generated/api";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 import { EnhancedMedicalRecordForm } from "./EnhancedMedicalRecordForm";
@@ -87,6 +88,7 @@ function FavoriteAssessmentButton({
   predictionId: Id<"riskPredictions">;
   isFavorite?: boolean;
 }) {
+  const { t } = useTranslation();
   const [isToggling, setIsToggling] = useState(false);
   const toggleFavorite = useMutation(api.predictions.toggleFavorite);
 
@@ -96,7 +98,7 @@ function FavoriteAssessmentButton({
       await toggleFavorite({ predictionId });
       // No toast needed - visual feedback is enough
     } catch (error: any) {
-      toast.error(error.message || "Failed to update favorite status");
+      toast.error(error.message || t("dashboard.removeFromFavorites"));
     } finally {
       setIsToggling(false);
     }
@@ -111,7 +113,7 @@ function FavoriteAssessmentButton({
           ? "text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50"
           : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-50"
       }`}
-      title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+      title={isFavorite ? t("dashboard.removeFromFavorites") : t("dashboard.addToFavorites")}
     >
       <Star className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
     </button>
@@ -120,6 +122,7 @@ function FavoriteAssessmentButton({
 
 // Delete Assessment Button Component
 function DeleteAssessmentButton({ predictionId }: { predictionId: Id<"riskPredictions"> }) {
+  const { t } = useTranslation();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const deletePrediction = useMutation(api.predictions.deletePrediction);
@@ -128,10 +131,10 @@ function DeleteAssessmentButton({ predictionId }: { predictionId: Id<"riskPredic
     setIsDeleting(true);
     try {
       await deletePrediction({ predictionId });
-      toast.success("Assessment deleted successfully");
+      toast.success(t("dashboard.assessmentDeleted"));
       setShowConfirm(false);
     } catch (error: any) {
-      toast.error(error.message || "Failed to delete assessment");
+      toast.error(error.message || t("dashboard.deleteAssessment"));
       setIsDeleting(false);
     }
   };
@@ -153,11 +156,10 @@ function DeleteAssessmentButton({ predictionId }: { predictionId: Id<"riskPredic
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-red-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Delete Assessment?</h3>
+              <h3 className="text-xl font-bold text-gray-900">{t("dashboard.deleteAssessmentConfirm")}</h3>
             </div>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this assessment? This action cannot be undone. 
-              The assessment will be removed from your records and your doctor's view.
+              {t("dashboard.deleteAssessmentDesc")}
             </p>
             <div className="flex gap-3">
               <button
@@ -165,7 +167,7 @@ function DeleteAssessmentButton({ predictionId }: { predictionId: Id<"riskPredic
                 disabled={isDeleting}
                 className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors disabled:opacity-50"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleDelete}
@@ -175,10 +177,10 @@ function DeleteAssessmentButton({ predictionId }: { predictionId: Id<"riskPredic
                 {isDeleting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>Deleting...</span>
+                    <span>{t("dashboard.deleting")}</span>
                   </>
                 ) : (
-                  "Delete Assessment"
+                  t("dashboard.deleteAssessment")
                 )}
               </button>
             </div>
@@ -191,6 +193,7 @@ function DeleteAssessmentButton({ predictionId }: { predictionId: Id<"riskPredic
 
 // Medication Tracker Component
 function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editingMedication, setEditingMedication] = useState<Id<"medications"> | null>(null);
   const [showReminderModal, setShowReminderModal] = useState<Id<"medications"> | null>(null);
@@ -233,14 +236,14 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
   );
 
   const frequencyOptions = [
-    { value: "once_daily", label: "Once Daily" },
-    { value: "twice_daily", label: "Twice Daily" },
-    { value: "thrice_daily", label: "Three Times Daily" },
-    { value: "four_times_daily", label: "Four Times Daily" },
-    { value: "as_needed", label: "As Needed" },
-    { value: "weekly", label: "Weekly" },
-    { value: "monthly", label: "Monthly" },
-    { value: "custom", label: "Custom" },
+    { value: "once_daily", label: t("dashboard.medications.frequencyOptions.onceDaily") },
+    { value: "twice_daily", label: t("dashboard.medications.frequencyOptions.twiceDaily") },
+    { value: "thrice_daily", label: t("dashboard.medications.frequencyOptions.threeTimesDaily") },
+    { value: "four_times_daily", label: t("dashboard.medications.frequencyOptions.fourTimesDaily") },
+    { value: "as_needed", label: t("dashboard.medications.frequencyOptions.asNeeded") },
+    { value: "weekly", label: t("dashboard.medications.frequencyOptions.weekly") },
+    { value: "monthly", label: t("dashboard.medications.frequencyOptions.monthly") },
+    { value: "custom", label: t("dashboard.medications.frequencyOptions.custom") },
   ];
 
   const getFrequencyLabel = (freq: string) => {
@@ -267,7 +270,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
             notes: formData.notes || undefined,
           },
         });
-        toast.success("Medication updated successfully");
+        toast.success(t("dashboard.medications.editMedication"));
       } else {
         await createMedication({
           patientId,
@@ -280,7 +283,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
           isActive: formData.isActive,
           notes: formData.notes || undefined,
         });
-        toast.success("Medication added successfully");
+        toast.success(t("dashboard.medications.addMedication"));
       }
 
       // Reset form
@@ -317,12 +320,12 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
   };
 
   const handleDelete = async (medicationId: Id<"medications">) => {
-    if (confirm("Are you sure you want to delete this medication?")) {
+    if (confirm(t("dashboard.medications.deleteMedication"))) {
       try {
         await deleteMedication({ medicationId });
-        toast.success("Medication deleted successfully");
+        toast.success(t("dashboard.medications.deleteMedication"));
       } catch (error: any) {
-        toast.error(error.message || "Failed to delete medication");
+        toast.error(error.message || t("dashboard.medications.deleteMedication"));
       }
     }
   };
@@ -395,7 +398,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
       await deleteReminder({ reminderId });
       toast.success("Reminder deleted successfully");
     } catch (error: any) {
-      toast.error(error.message || "Failed to delete reminder");
+      toast.error(error.message || t("dashboard.medications.setReminders"));
     }
   };
 
@@ -408,17 +411,17 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
     if (!editingReminderId || !editingReminderTime) return;
     
     if (!/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(editingReminderTime)) {
-      toast.error("Invalid time format. Please use HH:MM (e.g., 08:00)");
+      toast.error(t("dashboard.medications.reminderTimes"));
       return;
     }
     
     try {
       await updateReminderTime({ reminderId: editingReminderId, newTime: editingReminderTime });
-      toast.success("Reminder time updated successfully");
+      toast.success(t("dashboard.medications.saveReminders"));
       setEditingReminderId(null);
       setEditingReminderTime("");
     } catch (error: any) {
-      toast.error(error.message || "Failed to update reminder time");
+      toast.error(error.message || t("dashboard.medications.saveReminders"));
     }
   };
 
@@ -435,7 +438,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-semibold text-red-900 mb-2">Drug Interaction Warning</h4>
+              <h4 className="font-semibold text-red-900 mb-2">{t("dashboard.medications.interactionWarning")}</h4>
               <div className="space-y-2">
                 {interactions.map((interaction: any, idx: number) => (
                   <div key={idx} className="bg-white rounded-lg p-3 border border-red-200">
@@ -445,14 +448,16 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                         interaction.severity === 'moderate' ? 'bg-orange-500 text-white' :
                         'bg-yellow-500 text-white'
                       }`}>
-                        {interaction.severity.toUpperCase()}
+                        {interaction.severity === 'severe' ? t("dashboard.medications.severe") :
+                         interaction.severity === 'moderate' ? t("dashboard.medications.moderate") :
+                         t("dashboard.medications.mild")}
                       </span>
                       <span className="font-semibold text-gray-900">
                         {interaction.medication1} + {interaction.medication2}
                       </span>
                     </div>
                     <p className="text-sm text-gray-700 mb-1">{interaction.description}</p>
-                    <p className="text-sm font-medium text-gray-900">Recommendation: {interaction.recommendation}</p>
+                    <p className="text-sm font-medium text-gray-900">{t("dashboard.medications.recommendation")}: {interaction.recommendation}</p>
                   </div>
                 ))}
               </div>
@@ -467,7 +472,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
           <div className="flex items-start gap-3">
             <Bell className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-semibold text-blue-900 mb-2">Upcoming Medication Reminders</h4>
+              <h4 className="font-semibold text-blue-900 mb-2">{t("dashboard.medications.upcomingReminders")}</h4>
               <div className="space-y-2">
                 {upcomingReminders.map((reminder: any) => {
                   const reminderDate = new Date(reminder.nextReminderDate);
@@ -515,7 +520,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                               {reminder.medication?.name} - {reminder.medication?.dosage}
                             </p>
                             <p className="text-sm text-gray-600">
-                              {isToday ? 'Today' : reminderDate.toLocaleDateString('en-GB', {
+                              {isToday ? t("dashboard.medications.today") : reminderDate.toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: '2-digit',
                                 year: 'numeric'
@@ -602,7 +607,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Dosage *
+                  {t("dashboard.medications.dosage")} *
                 </label>
                 <input
                   type="text"
@@ -633,7 +638,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date *
+                  {t("dashboard.medications.startDate")} *
                 </label>
                 <input
                   type="date"
@@ -666,7 +671,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                     className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">Currently Active</span>
+                  <span className="text-sm font-medium text-gray-700">{t("dashboard.medications.currentlyActive")}</span>
                 </label>
               </div>
             </div>
@@ -689,7 +694,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                 type="submit"
                 className="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-colors"
               >
-                {editingMedication ? "Update Medication" : "Add Medication"}
+                {editingMedication ? t("dashboard.medications.editMedication") : t("dashboard.medications.addMedication")}
               </button>
               <button
                 type="button"
@@ -699,7 +704,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                 }}
                 className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
               >
-                Cancel
+                {t("dashboard.medications.cancel")}
               </button>
             </div>
           </form>
@@ -710,7 +715,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
       <div className="bg-white rounded-2xl shadow-premium p-6">
         <div className="flex items-center gap-2 mb-4">
           <CheckCircle className="w-5 h-5 text-green-600" />
-          <h4 className="text-lg font-semibold text-gray-900">Active Medications</h4>
+          <h4 className="text-lg font-semibold text-gray-900">{t("dashboard.medications.activeMedications")}</h4>
           <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
             {activeMedications.length}
           </span>
@@ -728,15 +733,15 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                       <Pill className="w-5 h-5 text-primary-600" />
                       <h5 className="font-semibold text-gray-900">{medication.name}</h5>
                       <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                        Active
+                        {t("dashboard.medications.active")}
                       </span>
                     </div>
                     <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600 ml-8">
-                      <p><span className="font-medium">Dosage:</span> {medication.dosage}</p>
-                      <p><span className="font-medium">Frequency:</span> {getFrequencyLabel(medication.frequency)}</p>
-                      <p><span className="font-medium">Started:</span> {formatDate(medication.startDate)}</p>
+                      <p><span className="font-medium">{t("dashboard.medications.dosage")}:</span> {medication.dosage}</p>
+                      <p><span className="font-medium">{t("dashboard.medications.frequency")}:</span> {getFrequencyLabel(medication.frequency)}</p>
+                      <p><span className="font-medium">{t("dashboard.medications.started")}:</span> {formatDate(medication.startDate)}</p>
                       {medication.times && medication.times.length > 0 && (
-                        <p><span className="font-medium">Times:</span> {medication.times.join(", ")}</p>
+                        <p><span className="font-medium">{t("dashboard.medications.times")}:</span> {medication.times.join(", ")}</p>
                       )}
                     </div>
                     {medication.notes && (
@@ -747,21 +752,21 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                     <button
                       onClick={() => handleOpenReminderModal(medication)}
                       className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Set reminders"
+                      title={t("dashboard.medications.setReminders")}
                     >
                       <Bell className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleEdit(medication)}
                       className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                      title="Edit medication"
+                      title={t("dashboard.medications.editMedication")}
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(medication._id)}
                       className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete medication"
+                      title={t("dashboard.medications.deleteMedication")}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -773,7 +778,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
         ) : (
           <div className="text-center py-8 text-gray-500">
             <Pill className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p>No active medications. Add one to get started!</p>
+            <p>{t("dashboard.medications.noActiveMedications")}</p>
           </div>
         )}
       </div>
@@ -783,7 +788,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
         <div className="bg-white rounded-2xl shadow-premium p-6">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-gray-400" />
-            <h4 className="text-lg font-semibold text-gray-900">Past Medications</h4>
+            <h4 className="text-lg font-semibold text-gray-900">{t("dashboard.medications.pastMedications")}</h4>
             <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
               {inactiveMedications.length}
             </span>
@@ -839,7 +844,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Set Medication Reminders</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t("dashboard.medications.setReminders")}</h3>
               <button
                 onClick={() => {
                   setShowReminderModal(null);
@@ -861,7 +866,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                   onChange={(e) => setEnableReminders(e.target.checked)}
                   className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
                 />
-                <span className="text-sm font-medium text-gray-700">Enable reminders for this medication</span>
+                <span className="text-sm font-medium text-gray-700">{t("dashboard.medications.enableReminders")}</span>
               </label>
 
               {enableReminders && (
@@ -869,7 +874,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                   {/* Existing Active Reminders */}
                   {existingReminders && existingReminders.length > 0 && (
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Active Reminders</label>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">{t("dashboard.medications.activeReminders")}</label>
                       <div className="space-y-2 max-h-40 overflow-y-auto">
                         {existingReminders.map((reminder: any) => (
                           <div key={reminder._id} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -886,7 +891,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                                   type="button"
                                   onClick={handleSaveEditReminder}
                                   className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-                                  title="Save"
+                                  title={t("common.save")}
                                 >
                                   <Check className="w-4 h-4" />
                                 </button>
@@ -894,7 +899,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                                   type="button"
                                   onClick={handleCancelEditReminder}
                                   className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm"
-                                  title="Cancel"
+                                  title={t("common.cancel")}
                                 >
                                   <X className="w-4 h-4" />
                                 </button>
@@ -906,7 +911,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                                   <Bell className="w-4 h-4 text-blue-600" />
                                   <span className="text-sm font-medium text-gray-900">{reminder.reminderTime}</span>
                                   <span className="text-xs text-gray-500">
-                                    (Next: {new Date(reminder.nextReminderDate).toLocaleDateString()})
+                                    ({t("dashboard.history.latest")}: {new Date(reminder.nextReminderDate).toLocaleDateString()})
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-1">
@@ -914,7 +919,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                                     type="button"
                                     onClick={() => handleStartEditReminder(reminder._id, reminder.reminderTime)}
                                     className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                                    title="Edit reminder time"
+                                    title={t("dashboard.medications.setReminders")}
                                   >
                                     <Edit2 className="w-4 h-4" />
                                   </button>
@@ -922,7 +927,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                                     type="button"
                                     onClick={() => handleDeleteReminder(reminder._id)}
                                     className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Delete reminder"
+                                    title={t("dashboard.medications.setReminders")}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -938,7 +943,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                   {/* Add New Reminder Times */}
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      {existingReminders && existingReminders.length > 0 ? "Add More Reminder Times" : "Reminder Times"}
+                      {existingReminders && existingReminders.length > 0 ? t("dashboard.medications.addReminderTimes") : t("dashboard.medications.reminderTimes")}
                     </label>
                     
                     {/* Add Time Input */}
@@ -948,7 +953,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                         value={newReminderTime}
                         onChange={(e) => setNewReminderTime(e.target.value)}
                         className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500"
-                        placeholder="Select time"
+                        placeholder={t("dashboard.medications.reminderTimes")}
                       />
                       <button
                         type="button"
@@ -957,7 +962,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                         className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
                         <Plus className="w-4 h-4" />
-                        Add
+                        {t("dashboard.medications.add")}
                       </button>
                     </div>
 
@@ -975,7 +980,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                               type="button"
                               onClick={() => removeReminderTime(time)}
                               className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Remove time"
+                              title={t("common.delete")}
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -986,9 +991,9 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                   </div>
 
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-xs text-blue-900 font-medium mb-1">📧 Notification Information</p>
+                    <p className="text-xs text-blue-900 font-medium mb-1">📧 {t("dashboard.medications.notificationInfo")}</p>
                     <p className="text-xs text-blue-800">
-                      You'll receive <strong>in-app notifications</strong> and <strong>email reminders</strong> (if email notifications are enabled in your profile settings) at the scheduled times.
+                      {t("dashboard.medications.notificationInfo")}
                     </p>
                   </div>
                 </div>
@@ -1005,14 +1010,14 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                 >
-                  Cancel
+                  {t("dashboard.medications.cancel")}
                 </button>
                 <button
                   onClick={() => handleSaveReminders(showReminderModal)}
                   disabled={enableReminders && reminderTimes.length === 0}
                   className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Reminders
+                  {t("dashboard.medications.saveReminders")}
                 </button>
               </div>
             </div>
@@ -1024,6 +1029,7 @@ function MedicationTracker({ patientId }: { patientId: Id<"users"> }) {
 }
 
 export function EnhancedPatientDashboard({ userProfile, onViewProfile }: EnhancedPatientDashboardProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedDateRange, setSelectedDateRange] = useState("30"); // days
   const [showTutorial, setShowTutorial] = useState(false);
@@ -1213,18 +1219,18 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
   }
 
   const baseNavItems: NavItem[] = [
-    { id: "overview", label: "Overview", icon: BarChart3 },
-    { id: "assessment", label: "New Assessment", icon: FileText },
-    { id: "history", label: "History", icon: Calendar },
-    { id: "medications", label: "Medications", icon: Pill },
-    { id: "analytics", label: "Analytics", icon: TrendingUp },
-    { id: "education", label: "Education", icon: BookOpen },
-    { id: "messages", label: "Messages", icon: MessageSquare, action: () => setIsMessagingOpen(true) },
+    { id: "overview", label: t("dashboard.tabs.overview"), icon: BarChart3 },
+    { id: "assessment", label: t("dashboard.tabs.newAssessment"), icon: FileText },
+    { id: "history", label: t("dashboard.tabs.history"), icon: Calendar },
+    { id: "medications", label: t("dashboard.tabs.medications"), icon: Pill },
+    { id: "analytics", label: t("dashboard.tabs.analytics"), icon: TrendingUp },
+    { id: "education", label: t("dashboard.tabs.education"), icon: BookOpen },
+    { id: "messages", label: t("dashboard.tabs.messages"), icon: MessageSquare, action: () => setIsMessagingOpen(true) },
   ];
 
   // Guest users don't have profiles, so don't show profile link
   const navItems = onViewProfile && !userProfile.isGuest
-    ? [...baseNavItems, { id: "profile-link", label: "Profile", icon: UserCircle, action: onViewProfile }]
+    ? [...baseNavItems, { id: "profile-link", label: t("dashboard.tabs.profile"), icon: UserCircle, action: onViewProfile }]
     : baseNavItems;
 
   return (
@@ -1275,19 +1281,19 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-4">
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
-                Welcome back, {userProfile.firstName}!
+                {t("dashboard.welcome", { firstName: userProfile.firstName })}
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-sm sm:text-base text-gray-600">Monitor your diabetes risk and health metrics</p>
+                <p className="text-sm sm:text-base text-gray-600">{t("dashboard.subtitle")}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 sm:space-x-4 w-full sm:w-auto justify-between sm:justify-end">
               <div className="text-right hidden sm:block">
-                <p className="text-xs sm:text-sm text-gray-500">Last assessment</p>
+                <p className="text-xs sm:text-sm text-gray-500">{t("dashboard.lastAssessment")}</p>
                 <p className="text-sm sm:text-base font-semibold text-gray-900">
                   {dashboardData.latestPrediction ? 
                     getTimeAgo(dashboardData.latestPrediction._creationTime) : 
-                    'No assessments yet'
+                    t("dashboard.noAssessmentsYet")
                   }
                 </p>
               </div>
@@ -1378,36 +1384,36 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                   
                   // Determine status based on HbA1c (target: <7% for most, <6.5% for some)
                   let status = 'good';
-                  let statusText = 'Well Controlled';
+                  let statusText = t("dashboard.status.wellControlled");
                   let gradientClasses = 'bg-gradient-to-br from-green-500 via-green-600 to-emerald-700';
                   
                   if (hba1c) {
                     if (hba1c < 7.0) {
                       status = 'good';
-                      statusText = 'Well Controlled';
+                      statusText = t("dashboard.status.wellControlled");
                       gradientClasses = 'bg-gradient-to-br from-green-500 via-green-600 to-emerald-700';
                     } else if (hba1c < 8.0) {
                       status = 'moderate';
-                      statusText = 'Needs Improvement';
+                      statusText = t("dashboard.status.needsImprovement");
                       gradientClasses = 'bg-gradient-to-br from-yellow-500 via-yellow-600 to-amber-700';
                     } else {
                       status = 'poor';
-                      statusText = 'Needs Attention';
+                      statusText = t("dashboard.status.needsAttention");
                       gradientClasses = 'bg-gradient-to-br from-red-600 via-red-700 to-rose-800';
                     }
                   } else {
                     // Fallback to glucose level if no HbA1c
                     if (glucose < 140) {
                       status = 'good';
-                      statusText = 'Good Control';
+                      statusText = t("dashboard.status.wellControlled");
                       gradientClasses = 'bg-gradient-to-br from-green-500 via-green-600 to-emerald-700';
                     } else if (glucose < 180) {
                       status = 'moderate';
-                      statusText = 'Needs Improvement';
+                      statusText = t("dashboard.status.needsImprovement");
                       gradientClasses = 'bg-gradient-to-br from-yellow-500 via-yellow-600 to-amber-700';
                     } else {
                       status = 'poor';
-                      statusText = 'Needs Attention';
+                      statusText = t("dashboard.status.needsAttention");
                       gradientClasses = 'bg-gradient-to-br from-red-600 via-red-700 to-rose-800';
                     }
                   }
@@ -1423,7 +1429,7 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                             <Activity className="w-5 h-5 text-white animate-pulse" />
                           </div>
                           <span className="text-sm font-medium text-white">
-                            {hba1c ? 'HbA1c Level' : 'Glucose Control'}
+                            {hba1c ? t("dashboard.metrics.hba1cLevel") : t("dashboard.metrics.glucoseControl")}
                           </span>
                         </div>
                         
@@ -1481,10 +1487,10 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                           </div>
                           <span className="text-sm font-medium text-white">
                             {hasDiagnosedDiabetes 
-                              ? 'Complication Risk' 
+                              ? t("dashboard.metrics.complicationRisk")
                               : isPrediabetic 
-                              ? 'Progression Risk' 
-                              : 'Latest Risk Score'}
+                              ? t("dashboard.metrics.progressionRisk")
+                              : t("dashboard.metrics.latestRiskScore")}
                           </span>
                         </div>
                         
@@ -1506,7 +1512,7 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                               'bg-red-300'
                             }`} />
                             <span className="text-sm font-medium capitalize text-white">
-                              {formatRiskCategory(dashboardData.latestPrediction.riskCategory)} {hasDiagnosedDiabetes ? 'Complication' : isPrediabetic ? 'Progression' : ''} Risk
+                              {formatRiskCategory(dashboardData.latestPrediction.riskCategory)} {hasDiagnosedDiabetes ? t("dashboard.metrics.complicationRisk") : isPrediabetic ? t("dashboard.metrics.progressionRisk") : ''} {t("dashboard.risk.low")}
                             </span>
                           </div>
                         )}
@@ -1519,20 +1525,20 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
               {/* Secondary Stats Cards */}
               <div className="bg-white rounded-2xl p-5 shadow-premium hover:shadow-premium-hover transition-all duration-300 animate-fade-in-up stagger-1">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium text-gray-500">Total Assessments</span>
+                  <span className="text-sm font-medium text-gray-500">{t("dashboard.metrics.totalAssessments")}</span>
                   <div className="p-2.5 bg-emerald-50 rounded-xl">
                     <FileText className="w-5 h-5 text-emerald-600 animate-icon-float" />
                   </div>
                   </div>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl sm:text-3xl font-bold text-gray-900">{dashboardData.totalAssessments || 0}</span>
-                  <span className="text-xs sm:text-sm text-gray-400">completed</span>
+                  <span className="text-xs sm:text-sm text-gray-400">{t("dashboard.metrics.completed")}</span>
                 </div>
                 <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" />
                   {dashboardData.totalAssessments > 0 ? 
-                    `Last updated ${getTimeAgo(dashboardData.latestPrediction?._creationTime || 0)}` : 
-                    'Start your first assessment'
+                    `${t("dashboard.lastAssessment")} ${getTimeAgo(dashboardData.latestPrediction?._creationTime || 0)}` : 
+                    t("dashboard.recentAssessments.startFirst")
                   }
                 </p>
               </div>
@@ -1581,7 +1587,7 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                 // Confidence Level card for at-risk/prediabetic patients
                 <div className="bg-white rounded-2xl p-5 shadow-premium hover:shadow-premium-hover transition-all duration-300 animate-fade-in-up stagger-2">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-medium text-gray-500">Confidence Level</span>
+                    <span className="text-sm font-medium text-gray-500">{t("dashboard.metrics.confidenceLevel")}</span>
                     <div className="p-2.5 bg-yellow-50 rounded-xl">
                       <CheckCircle className="w-5 h-5 text-yellow-600 animate-pulse" />
                     </div>
@@ -1666,7 +1672,7 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
             <div data-tutorial="recent-assessments" className="bg-white rounded-2xl shadow-premium p-4 sm:p-6 animate-fade-in-up">
               <div className="flex items-center gap-3 mb-4 sm:mb-6">
                 <div className="h-8 w-1 bg-primary-500 rounded-full" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Recent Assessments</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{t("dashboard.recentAssessments.title")}</h3>
               </div>
               <div>
                 {dashboardData.recentPredictions?.length > 0 ? (
@@ -1696,14 +1702,14 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                               {typeof prediction.riskScore === 'number'
                                 ? prediction.riskScore.toFixed(1)
                                 : 'N/A'}% {hasDiagnosedDiabetes 
-                                  ? 'Complication Risk' 
+                                  ? t("dashboard.metrics.complicationRisk")
                                   : isPrediabetic 
-                                  ? 'Progression Risk' 
-                                  : 'Risk Score'}
+                                  ? t("dashboard.metrics.progressionRisk")
+                                  : t("dashboard.metrics.latestRiskScore")}
                             </p>
                             <p className="text-xs sm:text-sm text-gray-600 truncate">
                               {formatDateTime(prediction._creationTime)} • 
-                              Confidence: {prediction.confidenceScore ? 
+                              {t("dashboard.recentAssessments.confidence")}: {prediction.confidenceScore ? 
                                 (typeof prediction.confidenceScore === 'number' ? 
                                   prediction.confidenceScore.toFixed(1) : 
                                   prediction.confidenceScore) : 'N/A'}%
@@ -1731,7 +1737,7 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                                   userProfile.diabetesStatus
                                 );
                               } catch (error: any) {
-                                toast.error(error.message || "Failed to open print dialog");
+                                toast.error(error.message || t("dashboard.printAssessment"));
                               }
                             }}
                             className="p-2 sm:p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
@@ -1753,8 +1759,8 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                     <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
                       <FileText className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No assessments yet</h3>
-                    <p className="text-gray-500 max-w-sm">Start your first risk assessment to see your health metrics here</p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{t("dashboard.recentAssessments.noAssessments")}</h3>
+                    <p className="text-gray-500 max-w-sm">{t("dashboard.recentAssessments.startFirst")}</p>
                   </div>
                 )}
               </div>
@@ -1762,7 +1768,7 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
 
             {/* Quick Actions */}
             <div className="bg-gradient-to-r from-primary-50 to-primary-100 rounded-2xl p-6 shadow-premium">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("dashboard.quickActions.title")}</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                   data-tutorial="new-assessment"
@@ -1773,13 +1779,13 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                     <FileText className="w-6 h-6 text-primary-600" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-gray-900">New Assessment</p>
+                    <p className="font-semibold text-gray-900">{t("dashboard.quickActions.newAssessment")}</p>
                     <p className="text-sm text-gray-600">
                       {hasDiagnosedDiabetes 
-                        ? 'Assess your complication risk' 
+                        ? t("dashboard.quickActions.assessComplicationRisk")
                         : isPrediabetic 
-                        ? 'Assess your progression risk' 
-                        : 'Get your risk score'}
+                        ? t("dashboard.quickActions.assessProgressionRisk")
+                        : t("dashboard.quickActions.getRiskScore")}
                     </p>
                   </div>
                 </button>
@@ -1792,8 +1798,8 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                     <Calendar className="w-6 h-6 text-green-600 animate-icon-float" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-gray-900">View History</p>
-                    <p className="text-sm text-gray-600">See past assessments</p>
+                    <p className="font-semibold text-gray-900">{t("dashboard.quickActions.viewHistory")}</p>
+                    <p className="text-sm text-gray-600">{t("dashboard.quickActions.seePastAssessments")}</p>
                   </div>
                 </button>
 
@@ -1805,8 +1811,8 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                     <TrendingUp className="w-6 h-6 text-purple-600 animate-icon-float" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-gray-900">Analytics</p>
-                    <p className="text-sm text-gray-600">Track your progress</p>
+                    <p className="font-semibold text-gray-900">{t("dashboard.quickActions.analytics")}</p>
+                    <p className="text-sm text-gray-600">{t("dashboard.quickActions.trackProgress")}</p>
                   </div>
                 </button>
               </div>
@@ -1834,31 +1840,31 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-1 bg-primary-500 rounded-full" />
-              <h3 className="text-lg font-semibold text-gray-900">Assessment History</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t("dashboard.history.title")}</h3>
               </div>
               <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
-                <label className="text-sm text-gray-600">Filter by:</label>
+                <label className="text-sm text-gray-600">{t("dashboard.history.filterBy")}</label>
                 <select
                   value={selectedDateRange}
                   onChange={(e) => setSelectedDateRange(e.target.value)}
                     className="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all"
                 >
-                  <option value="7">Last 7 days</option>
-                  <option value="30">Last 30 days</option>
-                  <option value="90">Last 90 days</option>
-                  <option value="365">Last year</option>
+                  <option value="7">{t("dashboard.history.last7Days")}</option>
+                  <option value="30">{t("dashboard.history.last30Days")}</option>
+                  <option value="90">{t("dashboard.history.last90Days")}</option>
+                  <option value="365">{t("dashboard.history.lastYear")}</option>
                 </select>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-600">Show:</label>
+                  <label className="text-sm text-gray-600">{t("dashboard.history.show")}:</label>
                   <select
                     value={favoriteFilter}
                     onChange={(e) => setFavoriteFilter(e.target.value as "all" | "favorites")}
                     className="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all"
                   >
-                    <option value="all">All Assessments</option>
-                    <option value="favorites">Favorites Only</option>
+                    <option value="all">{t("dashboard.history.allAssessments")}</option>
+                    <option value="favorites">{t("dashboard.history.favoritesOnly")}</option>
                   </select>
                 </div>
               </div>
@@ -1879,9 +1885,9 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                       <div className="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mb-4">
                         <Star className="w-8 h-8 text-yellow-500" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Favorite Assessments</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{t("dashboard.history.noFavorites")}</h3>
                       <p className="text-sm text-gray-500 max-w-md">
-                        You haven't marked any assessments as favorites yet. Click the star icon on any assessment to add it to your favorites.
+                        {t("dashboard.history.noFavoritesDesc")}
                       </p>
                     </div>
                   );
@@ -2024,7 +2030,7 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                         <details className="mt-4 group">
                           <summary className="flex items-center gap-2 cursor-pointer text-sm font-medium text-primary-600 hover:text-primary-700">
                             <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
-                            View Recommendations
+                            {t("dashboard.history.viewRecommendations")}
                           </summary>
                           <div className="mt-3 pl-6 space-y-2">
                             {prediction.recommendations.map((rec: string, i: number) => (
@@ -2047,8 +2053,8 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                 <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
                   <Calendar className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No assessment history found</h3>
-                <p className="text-gray-500 max-w-sm">Complete your first assessment to see history</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t("dashboard.history.noHistory")}</h3>
+                <p className="text-gray-500 max-w-sm">{t("dashboard.history.completeFirst")}</p>
               </div>
             )}
           </div>
@@ -2081,7 +2087,7 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
         {/* ==================== ANALYTICS TAB ==================== */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-900">Health Analytics</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t("dashboard.analytics.title")}</h2>
             
             {(() => {
               // Use riskPredictions as the main data source
@@ -2171,10 +2177,10 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-gray-500 text-sm font-medium">
                           {hasDiagnosedDiabetes 
-                            ? 'Complication Risk' 
+                            ? t("dashboard.metrics.complicationRisk")
                             : isPrediabetic 
-                            ? 'Progression Risk' 
-                            : 'Current Risk Score'}
+                            ? t("dashboard.metrics.progressionRisk")
+                            : t("dashboard.metrics.latestRiskScore")}
                         </span>
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                           latestPrediction?.riskCategory === 'low' ? 'bg-green-100' :
@@ -2254,7 +2260,7 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                               </div>
                             </div>
                             <p className={`text-lg font-bold ${textColorClasses}`}>
-                              {isImproving ? 'Improving' : isWorsening ? 'Increasing Risk' : 'Stable'}
+                              {isImproving ? t("dashboard.analytics.trendImproving") : isWorsening ? t("dashboard.status.increasingRisk") : t("dashboard.analytics.trendStable")}
                             </p>
                             <p className={`text-sm mt-1 ${textColorClasses} opacity-90`}>
                               {trendDiff !== 0 ? `${trendDiff > 0 ? '+' : ''}${trendDiff.toFixed(1)}%` : 'No change'}
@@ -2271,17 +2277,17 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                       <div>
                         <h3 className="font-semibold text-gray-900">
                           {hasDiagnosedDiabetes 
-                            ? 'Complication Risk Trend' 
+                            ? t("dashboard.analytics.complicationRiskTrend")
                             : isPrediabetic 
-                            ? 'Progression Risk Trend' 
-                            : 'Risk Score Trend'}
+                            ? t("dashboard.analytics.progressionRiskTrend")
+                            : t("dashboard.analytics.riskScoreTrend")}
                         </h3>
                         <p className="text-sm text-gray-500">
                           {hasDiagnosedDiabetes 
-                            ? 'Complication risk progression over time' 
+                            ? t("dashboard.analytics.complicationRiskTrend")
                             : isPrediabetic 
-                            ? 'Risk of progressing to diabetes over time' 
-                            : 'Your risk progression over time'}
+                            ? t("dashboard.analytics.progressionRiskTrend")
+                            : t("dashboard.analytics.riskScoreTrend")}
                         </p>
                       </div>
                       {totalAssessments >= 2 && (
@@ -2292,14 +2298,14 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                           {isImproving ? <TrendingDown className="w-4 h-4" /> :
                            isWorsening ? <TrendingUp className="w-4 h-4" /> :
                            <Minus className="w-4 h-4" />}
-                          {isImproving ? 'Improving' : isWorsening ? 'Worsening' : 'Stable'}
+                          {isImproving ? t("dashboard.analytics.trendImproving") : isWorsening ? t("dashboard.analytics.trendWorsening") : t("dashboard.analytics.trendStable")}
               </div>
             )}
                     </div>
                     
                     {totalAssessments < 2 && (
                       <p className="text-amber-600 text-sm mb-4 bg-amber-50 p-3 rounded-lg">
-                        ⚠️ Complete at least 2 assessments to see trend analysis.
+                        ⚠️ {t("dashboard.analytics.needMoreAssessments")}
                       </p>
                     )}
                     
@@ -2402,21 +2408,21 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
                         <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
                         <h3 className="font-semibold text-gray-900">
                           {hasDiagnosedDiabetes 
-                            ? 'Key Factors for Diabetes Management' 
+                            ? t("dashboard.analytics.keyFactorsManagement")
                             : isPrediabetic 
-                            ? 'Key Risk Factors for Diabetes Progression' 
-                            : 'Key Risk Factors'}
+                            ? t("dashboard.analytics.keyFactorsProgression")
+                            : t("dashboard.analytics.keyRiskFactors")}
                         </h3>
                       </div>
                       <div className="flex items-center gap-4 text-xs">
                         <span className="flex items-center gap-1.5">
-                          <span className="w-3 h-3 bg-red-500 rounded-full"></span> Above Normal
+                          <span className="w-3 h-3 bg-red-500 rounded-full"></span> {t("dashboard.analytics.aboveNormal")}
                         </span>
                         <span className="flex items-center gap-1.5">
-                          <span className="w-3 h-3 bg-yellow-500 rounded-full"></span> Borderline
+                          <span className="w-3 h-3 bg-yellow-500 rounded-full"></span> {t("dashboard.analytics.borderline")}
                         </span>
                         <span className="flex items-center gap-1.5">
-                          <span className="w-3 h-3 bg-green-500 rounded-full"></span> Normal
+                          <span className="w-3 h-3 bg-green-500 rounded-full"></span> {t("dashboard.analytics.normal")}
                         </span>
                       </div>
                     </div>

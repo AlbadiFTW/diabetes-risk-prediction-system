@@ -34,6 +34,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAction, useMutation } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { toast } from "sonner";
@@ -59,6 +60,7 @@ export function TwoFactorVerificationModal({
   onVerify,
   onCancel,
 }: TwoFactorVerificationModalProps) {
+  const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [trustDevice, setTrustDevice] = useState(false);
@@ -75,14 +77,14 @@ export function TwoFactorVerificationModal({
       sendSMSCode({ userId })
         .then((result) => {
           if (result.success) {
-            toast.success("SMS code sent to your phone number");
+            toast.success(t("twoFactor.smsCodeSentSuccess"));
           } else {
-            toast.error(result.error || "Failed to send SMS code. Please try again.");
+            toast.error(result.error || t("twoFactor.failedToResendSMS"));
           }
         })
         .catch((error) => {
           console.error("Failed to send SMS code:", error);
-          toast.error("Failed to send SMS code. Please try again.");
+          toast.error(t("twoFactor.failedToResendSMS"));
         });
     }
   }, [method, userId, sendSMSCode]);
@@ -90,7 +92,7 @@ export function TwoFactorVerificationModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length !== 6) {
-      setError("Please enter a 6-digit code");
+      setError(t("twoFactor.enter6DigitCode"));
       return;
     }
 
@@ -103,13 +105,13 @@ export function TwoFactorVerificationModal({
         const result = await verifyTOTPCode({ userId, code });
         if (result.success) {
           if (result.usedBackupCode) {
-            toast.info("Backup code used. Please generate new backup codes in settings.");
+            toast.info(t("twoFactor.backupCodeUsed"));
           }
           setCode("");
           onVerify(trustDevice);
         } else {
           // Extract attempts remaining from error message if present
-          const errorMsg = result.error || "Invalid verification code";
+          const errorMsg = result.error || t("twoFactor.invalidVerificationCode");
           const attemptsMatch = errorMsg.match(/(\d+)\s+attempts?/i);
           if (attemptsMatch) {
             setAttemptsRemaining(parseInt(attemptsMatch[1]));
@@ -125,7 +127,7 @@ export function TwoFactorVerificationModal({
           onVerify(trustDevice);
         } else {
           // Extract attempts remaining from error message if present
-          const errorMsg = result.error || "Invalid verification code";
+          const errorMsg = result.error || t("twoFactor.invalidVerificationCode");
           const attemptsMatch = errorMsg.match(/(\d+)\s+attempts?/i);
           if (attemptsMatch) {
             setAttemptsRemaining(parseInt(attemptsMatch[1]));
@@ -136,7 +138,7 @@ export function TwoFactorVerificationModal({
         }
       }
     } catch (error: any) {
-      const errorMsg = error.message || "Verification failed. Please try again.";
+      const errorMsg = error.message || t("twoFactor.invalidVerificationCode");
       setError(errorMsg);
       setCode("");
       toast.error(errorMsg);
@@ -148,10 +150,10 @@ export function TwoFactorVerificationModal({
   const handleResendSMS = async () => {
     try {
       await sendSMSCode({ userId });
-      toast.success("SMS code resent");
+      toast.success(t("twoFactor.smsCodeResent"));
       setCode("");
     } catch (error: any) {
-      toast.error(error.message || "Failed to resend SMS code");
+      toast.error(error.message || t("twoFactor.failedToResendSMS"));
     }
   };
 
@@ -167,12 +169,12 @@ export function TwoFactorVerificationModal({
             )}
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Two-Factor Authentication
+            {t("twoFactor.twoFactorAuth")}
           </h2>
           <p className="text-gray-600">
             {method === "totp"
-              ? "Enter the 6-digit code from your authenticator app"
-              : `Enter the 6-digit code sent to ${phoneNumber || "your phone"}`}
+              ? t("twoFactor.enterCodeFromApp")
+              : t("twoFactor.enterCodeSentToPhone", { phoneNumber: phoneNumber || t("common.info") })}
           </p>
         </div>
 
@@ -194,17 +196,20 @@ export function TwoFactorVerificationModal({
                   : "border-gray-200 focus:border-blue-500 focus:ring-blue-500/10"
               }`}
             />
-            {error && (
+                {error && (
               <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-800 font-medium">{error}</p>
                 {attemptsRemaining !== null && attemptsRemaining > 0 && (
                   <p className="text-xs text-red-600 mt-1">
-                    {attemptsRemaining} {attemptsRemaining === 1 ? "attempt" : "attempts"} remaining before the code expires.
+                    {t("twoFactor.attemptsRemaining", { 
+                      count: attemptsRemaining, 
+                      plural: attemptsRemaining === 1 ? t("twoFactor.attempt") : t("twoFactor.attempts")
+                    })}
                   </p>
                 )}
                 {attemptsRemaining === 0 && (
                   <p className="text-xs text-red-600 mt-1">
-                    Too many failed attempts. Please request a new code.
+                    {t("twoFactor.tooManyAttempts")}
                   </p>
                 )}
               </div>
@@ -217,7 +222,7 @@ export function TwoFactorVerificationModal({
               onClick={handleResendSMS}
               className="text-sm text-blue-600 hover:text-blue-700 underline w-full"
             >
-              Resend code
+              {t("twoFactor.resendCode")}
             </button>
           )}
 
@@ -231,9 +236,9 @@ export function TwoFactorVerificationModal({
               className="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
             />
             <label htmlFor="trustDevice" className="text-sm text-gray-700 cursor-pointer flex-1">
-              <span className="font-medium">Trust this device for 30 days</span>
+              <span className="font-medium">{t("twoFactor.trustDevice")}</span>
               <span className="block text-xs text-gray-500 mt-0.5">
-                You won't need to enter a code on this device for the next 30 days
+                {t("twoFactor.trustDeviceDesc")}
               </span>
             </label>
           </div>
@@ -244,7 +249,7 @@ export function TwoFactorVerificationModal({
               onClick={onCancel}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -254,10 +259,10 @@ export function TwoFactorVerificationModal({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Verifying...
+                  {t("twoFactor.verify")}
                 </>
               ) : (
-                "Verify"
+                t("twoFactor.verify")
               )}
             </button>
           </div>

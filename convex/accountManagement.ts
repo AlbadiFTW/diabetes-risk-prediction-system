@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { api } from "./_generated/api";
-import bcrypt from "bcryptjs";
+import { Scrypt } from "lucia";
 
 // Change email address (requires verification of new email)
 export const changeEmail = action({
@@ -71,14 +71,15 @@ export const changePassword = action({
       return { success: false, error: "Password account not found" };
     }
 
-    // Verify current password using bcrypt
-    const isPasswordValid = await bcrypt.compare(args.currentPassword, hashResult.passwordHash);
+    // Verify current password using Scrypt (same as Convex Auth's default)
+    const scrypt = new Scrypt();
+    const isPasswordValid = await scrypt.verify(hashResult.passwordHash, args.currentPassword);
     if (!isPasswordValid) {
       return { success: false, error: "Current password is incorrect" };
     }
 
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(args.newPassword, 10);
+    // Hash the new password using Scrypt
+    const hashedPassword = await scrypt.hash(args.newPassword);
 
     // Update the password
     const updateResult = await ctx.runMutation(api.passwordResetHelpers.updatePasswordHash, {

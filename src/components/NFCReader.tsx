@@ -290,3 +290,8 @@ export function convertNFCDataToForm(nfcData: NFCGlucoseData): {
 
 
 
+
+
+
+
+

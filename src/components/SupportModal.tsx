@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useMutation } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { X, Send, Mail, User, MessageSquare, AlertCircle } from "lucide-react";
@@ -11,6 +12,7 @@ interface SupportModalProps {
 }
 
 export function SupportModal({ isOpen, onClose }: SupportModalProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
@@ -24,7 +26,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
     e.preventDefault();
     
     if (!email || !subject || !message) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("support.fillRequiredFields"));
       return;
     }
 
@@ -37,7 +39,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
         message,
         priority,
       });
-      toast.success("Support message sent successfully! We'll get back to you soon.");
+      toast.success(t("support.messageSent"));
       // Reset form
       setEmail("");
       setName("");
@@ -46,7 +48,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
       setPriority("medium");
       onClose();
     } catch (error: any) {
-      toast.error(error.message || "Failed to send support message. Please try again.");
+      toast.error(error.message || t("support.failedToSend"));
     } finally {
       setIsSubmitting(false);
     }
@@ -64,8 +66,8 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
               <MessageSquare className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Contact Support</h2>
-              <p className="text-sm text-[#B9BBBE]">We're here to help!</p>
+              <h2 className="text-xl font-bold text-white">{t("support.contactSupport")}</h2>
+              <p className="text-sm text-[#B9BBBE]">{t("support.hereToHelp")}</p>
             </div>
           </div>
           <button
@@ -81,7 +83,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-[#B9BBBE] mb-2">
-              Email <span className="text-red-400">*</span>
+              {t("auth.email")} <span className="text-red-400">*</span>
             </label>
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9BBBE]">
@@ -91,7 +93,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@example.com"
+                    placeholder={t("auth.email")}
                 required
                 className="w-full pl-12 pr-4 py-3 bg-[#202225] border border-[#202225] rounded-lg text-white placeholder-[#72767D] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
               />
@@ -101,7 +103,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
           {/* Name (Optional) */}
           <div>
             <label className="block text-sm font-medium text-[#B9BBBE] mb-2">
-              Name (Optional)
+              {t("support.nameOptional")}
             </label>
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9BBBE]">
@@ -120,13 +122,13 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
           {/* Subject */}
           <div>
             <label className="block text-sm font-medium text-[#B9BBBE] mb-2">
-              Subject <span className="text-red-400">*</span>
+              {t("support.subject")} <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="Brief description of your issue"
+              placeholder={t("support.subjectPlaceholder")}
               required
               className="w-full px-4 py-3 bg-[#202225] border border-[#202225] rounded-lg text-white placeholder-[#72767D] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
             />
@@ -135,29 +137,29 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
           {/* Priority */}
           <div>
             <label className="block text-sm font-medium text-[#B9BBBE] mb-2">
-              Priority
+              {t("support.priority")}
             </label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as "low" | "medium" | "high" | "urgent")}
               className="w-full px-4 py-3 bg-[#202225] border border-[#202225] rounded-lg text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all"
             >
-              <option value="low">Low - General inquiry</option>
-              <option value="medium">Medium - Minor issue</option>
-              <option value="high">High - Important issue</option>
-              <option value="urgent">Urgent - Critical issue</option>
+              <option value="low">{t("support.low")}</option>
+              <option value="medium">{t("support.medium")}</option>
+              <option value="high">{t("support.high")}</option>
+              <option value="urgent">{t("support.urgent")}</option>
             </select>
           </div>
 
           {/* Message */}
           <div>
             <label className="block text-sm font-medium text-[#B9BBBE] mb-2">
-              Message <span className="text-red-400">*</span>
+              {t("support.message")} <span className="text-red-400">*</span>
             </label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Please describe your issue or question in detail..."
+              placeholder={t("support.messagePlaceholder")}
               required
               rows={6}
               className="w-full px-4 py-3 bg-[#202225] border border-[#202225] rounded-lg text-white placeholder-[#72767D] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none"
@@ -168,7 +170,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
           <div className="flex items-start gap-3 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
             <AlertCircle className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-[#B9BBBE]">
-              We typically respond within 24-48 hours. For urgent issues, please select "Urgent" priority.
+              {t("support.responseTime")}
             </p>
           </div>
 
@@ -179,7 +181,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
               onClick={onClose}
               className="flex-1 px-4 py-3 bg-[#202225] hover:bg-[#2A2D31] border border-[#202225] rounded-lg text-white font-medium transition-all"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -189,12 +191,12 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
               {isSubmitting ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Sending...</span>
+                  <span>{t("support.sending")}</span>
                 </>
               ) : (
                 <>
                   <Send className="w-5 h-5" />
-                  <span>Send Message</span>
+                  <span>{t("support.sendMessage")}</span>
                 </>
               )}
             </button>

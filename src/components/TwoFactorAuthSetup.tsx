@@ -34,6 +34,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useMutation, useAction, useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import {
@@ -57,6 +58,7 @@ interface TwoFactorAuthSetupProps {
 }
 
 export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupProps) {
+  const { t } = useTranslation();
   const [method, setMethod] = useState<"totp" | "sms">("totp");
   const [step, setStep] = useState<"select" | "setup" | "verify" | "complete">("select");
   const [verificationCode, setVerificationCode] = useState("");
@@ -114,11 +116,11 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
         setBackupCodes(result.backupCodes);
         setStep("setup");
       } catch (error: any) {
-        toast.error(error.message || "Failed to generate TOTP secret");
+        toast.error(error.message || t("twoFactor.failedToGenerateSecret"));
       }
     } else if (selectedMethod === "sms") {
       if (!userProfile?.phoneNumber || !userAccount?._id) {
-        toast.error("Please add a phone number in your profile first");
+        toast.error(t("twoFactor.addPhoneFirst"));
         return;
       }
       try {
@@ -127,19 +129,19 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
         const result = await sendSMSCode({ userId: userAccount._id, allowSetup: true });
         if (result.success) {
           setStep("verify");
-          toast.success("SMS code sent to your phone number");
+          toast.success(t("twoFactor.smsCodeSent"));
         } else {
-          toast.error(result.error || "Failed to send SMS code");
+          toast.error(result.error || t("twoFactor.failedToSendSMS"));
         }
       } catch (error: any) {
-        toast.error(error.message || "Failed to send SMS code");
+        toast.error(error.message || t("twoFactor.failedToSendSMS"));
       }
     }
   };
 
   const handleVerifyTOTP = async () => {
     if (!secret || !verificationCode) {
-      toast.error("Please enter the verification code");
+      toast.error(t("twoFactor.enterVerificationCode"));
       return;
     }
 
@@ -151,15 +153,15 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
       });
       setStep("complete");
       setShowBackupCodes(true);
-      toast.success("2FA enabled successfully!");
+      toast.success(t("twoFactor.twoFactorEnabledSuccess"));
     } catch (error: any) {
-      toast.error(error.message || "Invalid verification code");
+      toast.error(error.message || t("twoFactor.invalidVerificationCode"));
     }
   };
 
   const handleVerifySMS = async () => {
     if (!verificationCode || !userAccount?._id) {
-      toast.error("Please enter the verification code");
+      toast.error(t("twoFactor.enterVerificationCode"));
       return;
     }
 
@@ -174,12 +176,12 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
         // Only enable SMS 2FA after successful verification
         await enableSMS2FA({});
         setStep("complete");
-        toast.success("SMS 2FA enabled successfully!");
+        toast.success(t("twoFactor.sms2FAEnabled"));
       } else {
-        toast.error(result.error || "Invalid verification code");
+        toast.error(result.error || t("twoFactor.invalidVerificationCode"));
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to verify SMS code");
+      toast.error(error.message || t("twoFactor.failedToSendSMS"));
     }
   };
 
@@ -187,16 +189,16 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
     if (!userAccount?._id) return;
     try {
       await sendSMSCode({ userId: userAccount._id });
-      toast.success("SMS code resent");
+      toast.success(t("twoFactor.smsCodeResent"));
     } catch (error: any) {
-      toast.error(error.message || "Failed to resend SMS code");
+      toast.error(error.message || t("twoFactor.failedToResendSMS"));
     }
   };
 
   const copyBackupCodes = () => {
     const codesText = backupCodes.join("\n");
     navigator.clipboard.writeText(codesText);
-    toast.success("Backup codes copied to clipboard");
+    toast.success(t("twoFactor.backupCodesCopied"));
   };
 
   const downloadBackupCodes = () => {
@@ -208,7 +210,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
     a.download = "2fa-backup-codes.txt";
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Backup codes downloaded");
+    toast.success(t("twoFactor.backupCodesDownloaded"));
   };
 
   if (step === "select") {
@@ -216,7 +218,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Enable Two-Factor Authentication</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t("twoFactor.enable2FA")}</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -226,7 +228,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
           </div>
 
           <p className="text-gray-600 mb-6">
-            Choose your preferred method for two-factor authentication:
+            {t("twoFactor.chooseMethod")}
           </p>
 
           <div className="space-y-4">
@@ -240,9 +242,9 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
                   <Smartphone className="w-6 h-6 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">Authenticator App</h3>
+                  <h3 className="font-semibold text-gray-900">{t("twoFactor.authenticatorApp")}</h3>
                   <p className="text-sm text-gray-600">
-                    Use apps like Google Authenticator, Authy, or Microsoft Authenticator
+                    {t("twoFactor.authenticatorAppDesc")}
                   </p>
                 </div>
               </div>
@@ -258,12 +260,12 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
                   <MessageSquare className="w-6 h-6 text-green-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">SMS</h3>
+                  <h3 className="font-semibold text-gray-900">{t("twoFactor.sms")}</h3>
                   <p className="text-sm text-gray-600">
-                    Receive verification codes via text message
+                    {t("twoFactor.smsDesc")}
                     {userProfile?.phoneNumber && (
                       <span className="block text-xs text-gray-500 mt-1">
-                        To: {userProfile.phoneNumber}
+                        {t("twoFactor.to")} {userProfile.phoneNumber}
                       </span>
                     )}
                   </p>
@@ -277,7 +279,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
                 <p className="text-sm text-amber-800">
-                  To use SMS 2FA, please add a phone number in your profile settings first.
+                  {t("twoFactor.addPhoneFirst")}
                 </p>
               </div>
             </div>
@@ -292,7 +294,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Setup Authenticator App</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t("twoFactor.setupAuthenticator")}</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -304,7 +306,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
           <div className="space-y-6">
             <div>
               <p className="text-gray-600 mb-4">
-                1. Scan this QR code with your authenticator app:
+                {t("twoFactor.scanQRCode")}
               </p>
               {qrCodeUrl ? (
                 <div className="flex justify-center p-4 bg-gray-50 rounded-xl">
@@ -319,14 +321,14 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
 
             <div>
               <p className="text-gray-600 mb-2">
-                2. Or enter this code manually:
+                {t("twoFactor.enterManually")}
               </p>
               <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                 <code className="flex-1 font-mono text-sm">{secret}</code>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(secret || "");
-                    toast.success("Secret copied to clipboard");
+                    toast.success(t("twoFactor.secretCopied"));
                   }}
                   className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
                 >
@@ -354,14 +356,14 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
                 onClick={onClose}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleVerifyTOTP}
                 disabled={verificationCode.length !== 6}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Verify & Enable
+                {t("twoFactor.verifyEnable")}
               </button>
             </div>
           </div>
@@ -375,7 +377,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Verify SMS Code</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t("twoFactor.verifySMSCode")}</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -387,7 +389,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
           <div className="space-y-6">
             <div>
               <p className="text-gray-600 mb-2">
-                Enter the 6-digit code sent to {userProfile?.phoneNumber}:
+                {t("twoFactor.enterCodeSentTo", { phoneNumber: userProfile?.phoneNumber || "" })}:
               </p>
               <input
                 type="text"
@@ -403,7 +405,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
               onClick={handleResendSMS}
               className="text-sm text-blue-600 hover:text-blue-700 underline"
             >
-              Resend code
+              {t("twoFactor.resendCode")}
             </button>
 
             <div className="flex gap-3">
@@ -411,14 +413,14 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
                 onClick={onClose}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleVerifySMS}
                 disabled={verificationCode.length !== 6}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Verify & Enable
+                {t("twoFactor.verifyEnable")}
               </button>
             </div>
           </div>
@@ -436,10 +438,10 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Two-Factor Authentication Enabled
+              {t("twoFactor.twoFactorEnabled")}
             </h2>
             <p className="text-gray-600">
-              Your account is now protected with 2FA
+              {t("twoFactor.accountProtected")}
             </p>
           </div>
 
@@ -448,9 +450,9 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
               <div className="flex items-start gap-2 mb-3">
                 <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-amber-900 mb-1">Save Your Backup Codes</h3>
+                  <h3 className="font-semibold text-amber-900 mb-1">{t("twoFactor.saveBackupCodes")}</h3>
                   <p className="text-sm text-amber-800">
-                    These codes can be used to access your account if you lose access to your authenticator app. Save them in a safe place.
+                    {t("twoFactor.backupCodesDesc")}
                   </p>
                 </div>
               </div>
@@ -473,14 +475,14 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
                       className="flex-1 px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center gap-2 text-sm"
                     >
                       <Copy className="w-4 h-4" />
-                      Copy
+                      {t("twoFactor.copy")}
                     </button>
                     <button
                       onClick={downloadBackupCodes}
                       className="flex-1 px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center gap-2 text-sm"
                     >
                       <Download className="w-4 h-4" />
-                      Download
+                      {t("twoFactor.download")}
                     </button>
                   </div>
                 </div>
@@ -489,7 +491,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
                   onClick={() => setShowBackupCodes(true)}
                   className="w-full px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm"
                 >
-                  Show Backup Codes
+                  {t("twoFactor.showBackupCodes")}
                 </button>
               )}
             </div>
@@ -502,7 +504,7 @@ export function TwoFactorAuthSetup({ onClose, onComplete }: TwoFactorAuthSetupPr
             }}
             className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold"
           >
-            Done
+            {t("common.continue")}
           </button>
         </div>
       </div>

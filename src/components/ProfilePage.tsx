@@ -3,6 +3,7 @@ import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { exportToCSV, exportToPDF } from "../utils/exportData";
 import AssessmentReminderSection from "./AssessmentReminderSection";
@@ -36,6 +37,7 @@ import {
   Clock,
   Smartphone,
   MessageSquare,
+  Globe,
 } from "lucide-react";
 
 interface BaseProfile {
@@ -104,6 +106,7 @@ function RestartTutorialButton() {
 }
 
 export function ProfilePage({ onBack, fallbackProfile }: ProfilePageProps) {
+  const { t, i18n } = useTranslation();
   const profileDetails = useQuery(api.users.getProfileDetails);
   const updateProfile = useMutation(api.users.createUserProfile);
   const updateAccountSettings = useMutation(api.users.updateAccountSettings);
@@ -1150,8 +1153,8 @@ export function ProfilePage({ onBack, fallbackProfile }: ProfilePageProps) {
                 <Mail className="w-7 h-7 text-white" />
               </div>
               <div>
-                <p className="font-bold text-gray-900 text-lg mb-1">Email Address</p>
-                <p className="text-gray-600 font-medium text-sm">{profileDetails?.user?.email || "Not set"}</p>
+                <p className="font-bold text-gray-900 text-lg mb-1">{t("profile.emailAddress")}</p>
+                <p className="text-gray-600 font-medium text-sm">{profileDetails?.user?.email || t("profile.notSet")}</p>
               </div>
             </div>
             <button
@@ -1163,8 +1166,38 @@ export function ProfilePage({ onBack, fallbackProfile }: ProfilePageProps) {
               }}
               className="px-6 py-3 bg-cyan-500 text-white font-semibold text-sm rounded-xl hover:bg-cyan-600 transition-all transform hover:scale-105 shadow-lg"
             >
-              Change
+              {t("profile.change")}
             </button>
+          </div>
+
+          {/* Language Settings - Professional Style */}
+          <div className="flex items-center justify-between p-6 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border-2 border-emerald-100 transform hover:scale-[1.02] transition-transform">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Globe className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-lg mb-1">{t("profile.languageSettings")}</p>
+                <p className="text-gray-600 font-medium text-sm">{t("profile.selectLanguage")}</p>
+              </div>
+            </div>
+            <select
+              value={i18n.language}
+              onChange={(e) => {
+                const newLang = e.target.value;
+                i18n.changeLanguage(newLang);
+                // Save to localStorage (already handled by i18next-browser-languagedetector)
+                // Optionally save to user profile in database
+                if (profileDetails?.profile) {
+                  // You can add a mutation to save language preference to user profile
+                  // updateAccountSettings({ language: newLang });
+                }
+              }}
+              className="px-6 py-3 bg-emerald-500 text-white font-semibold text-sm rounded-xl hover:bg-emerald-600 transition-all transform hover:scale-105 shadow-lg border-none outline-none cursor-pointer"
+            >
+              <option value="en">🇺🇸 {t("profile.english")}</option>
+              <option value="ar">🇸🇦 {t("profile.arabic")}</option>
+            </select>
           </div>
 
         </div>

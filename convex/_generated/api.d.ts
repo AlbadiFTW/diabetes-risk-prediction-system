@@ -18,6 +18,7 @@ import type * as accountManagementHelpers from "../accountManagementHelpers.js";
 import type * as admin from "../admin.js";
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
+import type * as authConfig from "../authConfig.js";
 import type * as complicationRisk from "../complicationRisk.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   analytics: typeof analytics;
   auth: typeof auth;
+  authConfig: typeof authConfig;
   complicationRisk: typeof complicationRisk;
   crons: typeof crons;
   dashboard: typeof dashboard;
