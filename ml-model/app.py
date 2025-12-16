@@ -27,6 +27,11 @@ limiter = get_limiter()
 # Global predictor instance
 predictor = None
 
+# Load model on module import (for gunicorn)
+# This ensures the model is loaded when the app starts, not just when running directly
+print("Initializing application...")
+load_model()
+
 RISK_THRESHOLDS: List[Tuple[float, str]] = [
     (20, "Low"),
     (50, "Moderate"),
@@ -695,8 +700,8 @@ if __name__ == '__main__':
     print(f"Environment: {os.getenv('FLASK_ENV', 'development')}")
     print(f"API Key Required: {bool(os.getenv('ML_API_KEY'))}")
     
-    # Load model on startup
-    if load_model():
+    # Model already loaded at module level, but check if it succeeded
+    if predictor is not None:
         print("✓ API ready to serve predictions!")
         print("Rate Limits:")
         print("  - Global: 1000 requests/hour")
