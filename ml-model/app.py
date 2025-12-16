@@ -27,11 +27,6 @@ limiter = get_limiter()
 # Global predictor instance
 predictor = None
 
-# Load model on module import (for gunicorn)
-# This ensures the model is loaded when the app starts, not just when running directly
-print("Initializing application...")
-load_model()
-
 RISK_THRESHOLDS: List[Tuple[float, str]] = [
     (20, "Low"),
     (50, "Moderate"),
