@@ -363,15 +363,29 @@ def load_model():
         else:
             model_files.insert(0, 'diabetes_model.pkl')
         
+        print(f"Attempting to load model. Looking for files: {model_files}")
+        print(f"Current working directory: {os.getcwd()}")
+        print(f"Files in current directory: {os.listdir('.')}")
+        
         for model_file in model_files:
+            file_path = os.path.abspath(model_file)
+            print(f"Checking for model file: {file_path}")
             if os.path.exists(model_file):
-                predictor = DiabetesRiskPredictor()
-                predictor.load_model(model_file)
-                print(f"✓ Model loaded successfully from {model_file}!")
-                return True
+                print(f"✓ Found model file: {model_file}")
+                try:
+                    predictor = DiabetesRiskPredictor()
+                    predictor.load_model(model_file)
+                    print(f"✓ Model loaded successfully from {model_file}!")
+                    return True
+                except Exception as load_error:
+                    print(f"✗ Error loading model from {model_file}: {load_error}")
+                    import traceback
+                    traceback.print_exc()
+                    continue  # Try next file
         
         print(f"✗ Model file not found. Please train the model first.")
         print(f"  Expected files: {', '.join(model_files)}")
+        print(f"  Current directory contents: {os.listdir('.')}")
         return False
     except Exception as e:
         print(f"✗ Error loading model: {e}")
