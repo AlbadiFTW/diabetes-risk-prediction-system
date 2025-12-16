@@ -28,17 +28,6 @@ export const resetPassword = action({
       return { success: false, error: verifyResult.error };
     }
 
-    // Mark the code as used now that we're about to reset the password
-    // Get the verification record to mark it as used
-    const markUsedResult = await ctx.runMutation(api.passwordResetHelpers.markPasswordResetCodeAsUsed, {
-      email: args.email,
-      code: args.code,
-    });
-
-    if (!markUsedResult.success) {
-      return { success: false, error: "Failed to mark code as used. Please try again." };
-    }
-
     // Get user by email
     const userResult = await ctx.runMutation(api.passwordResetHelpers.getUserByEmail, {
       email: args.email,
@@ -56,6 +45,14 @@ export const resetPassword = action({
       userId: userResult.userId,
       hashedPassword: hashedPassword,
     });
+
+    // Only mark code as used after password is successfully updated
+    if (updateResult.success) {
+      await ctx.runMutation(api.passwordResetHelpers.markPasswordResetCodeAsUsed, {
+        email: args.email,
+        code: args.code,
+      });
+    }
 
     return updateResult;
   },
