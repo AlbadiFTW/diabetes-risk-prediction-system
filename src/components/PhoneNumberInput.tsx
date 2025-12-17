@@ -69,7 +69,7 @@ export function PhoneNumberInput({
         onChange(value.replace("+971", "").trim());
       }
     }
-  }, []);
+  }, [value]);
 
   const currentCountry = COUNTRIES[selectedCountry];
 
@@ -111,7 +111,7 @@ export function PhoneNumberInput({
     <div className={className}>
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          {label} ({currentCountry.name} - {currentCountry.maxDigits} digits)
+          {label}
         </label>
       )}
       <div className="relative flex">
@@ -121,11 +121,12 @@ export function PhoneNumberInput({
             type="button"
             onClick={() => !disabled && setShowDropdown(!showDropdown)}
             disabled={disabled}
-            className="flex items-center gap-2 px-3 py-2 border border-r-0 rounded-l-lg bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:z-10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-2 border-2 border-blue-400 border-r-0 rounded-l-lg bg-blue-50 hover:bg-blue-100 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:z-10 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+            title="Click to select country (Oman or UAE)"
           >
             <span className="text-xl">{currentCountry.flag}</span>
-            <span className="text-sm font-medium text-gray-700">{currentCountry.dialCode}</span>
-            <ChevronDown className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-semibold text-gray-700">{currentCountry.dialCode}</span>
+            <ChevronDown className={`w-4 h-4 text-blue-600 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
           </button>
 
           {/* Dropdown */}
@@ -173,10 +174,15 @@ export function PhoneNumberInput({
         />
       </div>
 
+      {/* Hint text */}
+      <p className="mt-1 text-xs text-gray-500">
+        Click the country code above to select Oman or UAE
+      </p>
+
       {/* Display full phone number with country code */}
       {value && !displayError && (
-        <p className="mt-1 text-xs text-gray-500">
-          {currentCountry.dialCode} {value}
+        <p className="mt-1 text-xs text-gray-600 font-medium">
+          Full number: {currentCountry.dialCode} {value}
         </p>
       )}
 
@@ -222,6 +228,8 @@ export function parsePhoneNumber(
     phoneNumber: fullPhoneNumber.replace(/\D/g, ""),
   };
 }
+
+
 
 
 
