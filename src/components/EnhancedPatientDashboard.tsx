@@ -1205,9 +1205,12 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
     return `${Math.floor(days / 30)} months ago`;
   };
 
-  // Messaging state and query - must be before any early returns
+  // Messaging state and query - only for registered users, not guests
   const [isMessagingOpen, setIsMessagingOpen] = useState(false);
-  const unreadCountResult = useQuery(api.messages.getUnreadMessageCount);
+  const unreadCountResult = useQuery(
+    api.messages.getUnreadMessageCount,
+    userProfile.isGuest ? "skip" : {}
+  );
   const unreadCount = typeof unreadCountResult === 'number' ? unreadCountResult : 0;
 
   if (!dashboardData) {
@@ -1228,10 +1231,14 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
     { id: "messages", label: t("dashboard.tabs.messages"), icon: MessageSquare, action: () => setIsMessagingOpen(true) },
   ];
 
-  // Guest users don't have profiles, so don't show profile link
-  const navItems = onViewProfile && !userProfile.isGuest
-    ? [...baseNavItems, { id: "profile-link", label: t("dashboard.tabs.profile"), icon: UserCircle, action: onViewProfile }]
+  // Filter out Messages for guests, add Profile for registered users only
+  const filteredNavItems = userProfile.isGuest 
+    ? baseNavItems.filter(item => item.id !== "messages")
     : baseNavItems;
+  
+  const navItems = onViewProfile
+    ? [...filteredNavItems, { id: "profile-link", label: t("dashboard.tabs.profile"), icon: UserCircle, action: onViewProfile }]
+    : filteredNavItems;
 
   return (
     <div className="min-h-screen bg-surface-50">
@@ -2070,8 +2077,8 @@ export function EnhancedPatientDashboard({ userProfile, onViewProfile }: Enhance
           <PatientEducationResources />
         )}
 
-        {/* Messaging Modal */}
-        {userProfile?.userId && (
+        {/* Messaging Modal - Only for registered users, not guests */}
+        {userProfile?.userId && !userProfile.isGuest && (
           <Messaging
             userProfile={{
               userId: userProfile.userId,

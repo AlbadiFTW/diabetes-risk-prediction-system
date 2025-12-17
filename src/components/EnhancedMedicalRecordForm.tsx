@@ -62,6 +62,9 @@ export function EnhancedMedicalRecordForm({ patientId, onSuccess }: EnhancedMedi
     notes: "",
   });
 
+  // For guests, allow gender selection in the form
+  const [selectedGender, setSelectedGender] = useState<"male" | "female" | "">("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mlPrediction, setMlPrediction] = useState<MLPredictionResponse | null>(null);
   const [showResults, setShowResults] = useState(false);
@@ -71,9 +74,22 @@ export function EnhancedMedicalRecordForm({ patientId, onSuccess }: EnhancedMedi
     userId: patientId as Id<"users">,
   });
 
-  const derivedGender = patientProfile?.gender || "male";
+  // Check if user is a guest (no email or isGuest flag)
+  const isGuest = !email || patientProfile?.isGuest === true;
+  
+  // For guests, use selectedGender; for registered users, use profile gender
+  const derivedGender = isGuest 
+    ? (selectedGender || "male") 
+    : (patientProfile?.gender || "male");
   const derivedAge = useMemo(() => calculateAgeFromDob(patientProfile?.dateOfBirth), [patientProfile?.dateOfBirth]);
   const shouldShowPregnancies = derivedGender === "female";
+  
+  // Initialize gender for guests from profile if available
+  useEffect(() => {
+    if (isGuest && patientProfile?.gender && !selectedGender) {
+      setSelectedGender(patientProfile.gender as "male" | "female");
+    }
+  }, [isGuest, patientProfile?.gender, selectedGender]);
 
   useEffect(() => {
     if (derivedAge && formData.age !== derivedAge) {
@@ -334,7 +350,7 @@ export function EnhancedMedicalRecordForm({ patientId, onSuccess }: EnhancedMedi
     
     // Priority order for scrolling (most important fields first)
     const priorityOrder = [
-      'systolicBP', 'diastolicBP', 'glucoseLevel', 'age', 
+      'gender', 'systolicBP', 'diastolicBP', 'glucoseLevel', 'age', 
       'height', 'weight', 'insulinLevel', 'skinThickness', 'pregnancies'
     ];
     
@@ -351,6 +367,7 @@ export function EnhancedMedicalRecordForm({ patientId, onSuccess }: EnhancedMedi
       } else {
         // Fallback: scroll to the section containing the error
         const sectionMap: Record<string, string> = {
+          'gender': 'personal-info',
           'systolicBP': 'vital-signs',
           'diastolicBP': 'vital-signs',
           'glucoseLevel': 'vital-signs',
@@ -375,6 +392,11 @@ export function EnhancedMedicalRecordForm({ patientId, onSuccess }: EnhancedMedi
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+
+    // For guests, validate gender is selected
+    if (isGuest && !selectedGender) {
+      newErrors.gender = "Please select your gender";
+    }
 
     if (!formData.age || parseInt(formData.age) < 1 || parseInt(formData.age) > 120) {
       newErrors.age = "Age must be between 1 and 120";
@@ -987,17 +1009,52 @@ export function EnhancedMedicalRecordForm({ patientId, onSuccess }: EnhancedMedi
 
               <div className="group">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Gender *
+                Gender * <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                value={patientProfile?.gender ? `${patientProfile.gender.charAt(0).toUpperCase()}${patientProfile.gender.slice(1)}` : "Not set"}
-                readOnly
-                  className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-xl text-gray-700 cursor-not-allowed"
-              />
-              {!patientProfile?.gender && (
-                  <p className="mt-1.5 text-sm text-amber-600">
-                  Update your profile to store gender. We will assume Male until it is provided.
+              {isGuest ? (
+                <>
+                  <select
+                    id="field-gender"
+                    value={selectedGender}
+                    onChange={(e) => {
+                      setSelectedGender(e.target.value as "male" | "female");
+                      // Clear error when user selects
+                      if (errors.gender) {
+                        const { gender, ...rest } = errors;
+                        setErrors(rest);
+                      }
+                    }}
+                    className={`w-full px-4 py-3.5 bg-white border-2 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all duration-200 ${
+                      errors.gender ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-primary-500'
+                    }`}
+                    required
+                  >
+                    <option value="">Select gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                  {errors.gender && (
+                    <p className="mt-1.5 text-sm text-red-600">{errors.gender}</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    value={patientProfile?.gender ? `${patientProfile.gender.charAt(0).toUpperCase()}${patientProfile.gender.slice(1)}` : "Not set"}
+                    readOnly
+                    className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-xl text-gray-700 cursor-not-allowed"
+                  />
+                  {!patientProfile?.gender && (
+                    <p className="mt-1.5 text-sm text-amber-600">
+                      Update your profile to store gender. We will assume Male until it is provided.
+                    </p>
+                  )}
+                </>
+              )}
+              {isGuest && !selectedGender && (
+                <p className="mt-1.5 text-sm text-amber-600">
+                  Please select your gender for accurate health assessments.
                 </p>
               )}
             </div>

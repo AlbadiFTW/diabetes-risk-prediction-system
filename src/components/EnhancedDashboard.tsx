@@ -29,14 +29,14 @@ export function EnhancedDashboard({ userProfile }: EnhancedDashboardProps) {
     isGuest ? "skip" : { userId: userProfile.userId }
   );
 
-  // For guest users, use the passed profile directly (they don't have a real profile)
+  // For guest users, use the passed profile directly (no profile page access)
   if (isGuest) {
     const profile = userProfile;
     if (isPatientProfile(profile)) {
       return (
         <EnhancedPatientDashboard
           userProfile={profile}
-          onViewProfile={undefined} // Guest users can't view profile
+          onViewProfile={undefined} // Guests don't need profile page
         />
       );
     }
@@ -57,25 +57,6 @@ export function EnhancedDashboard({ userProfile }: EnhancedDashboardProps) {
   const profile = currentUserProfile ?? userProfile;
 
   if (activeView === "profile") {
-    // Guest users cannot access profile page
-    if (isGuest || (profile as any).isGuest) {
-      return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Profile Not Available</h2>
-            <p className="text-gray-600 mb-4">
-              Guest users don't have profiles. Register with an email to create a profile and save your data.
-            </p>
-            <button
-              onClick={() => setActiveView("dashboard")}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        </div>
-      );
-    }
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ProfilePage onBack={() => setActiveView("dashboard")} fallbackProfile={profile as any} />
