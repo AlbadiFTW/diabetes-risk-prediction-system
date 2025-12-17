@@ -208,7 +208,7 @@ export function exportToCSV(data: ExportData, diabetesStatus?: string): void {
         name: "Smoking Status",
         value: recordData.smokingStatus.charAt(0).toUpperCase() + recordData.smokingStatus.slice(1),
         unit: "",
-        status: recordData.smokingStatus === "current" ? "Risk Factor" : "Not a Risk Factor",
+        status: recordData.smokingStatus === "current" ? "Risk Factor" : "No Risk",
         normalRange: "N/A",
         importance: recordData.smokingStatus === "current" ? 5 : 0
       });
@@ -523,7 +523,7 @@ export async function exportToPDF(data: ExportData, diabetesStatus?: string): Pr
         name: "Smoking Status",
         value: recordData.smokingStatus.charAt(0).toUpperCase() + recordData.smokingStatus.slice(1),
         unit: "",
-        status: recordData.smokingStatus === "current" ? "Risk Factor" : "Not a Risk Factor",
+        status: recordData.smokingStatus === "current" ? "Risk Factor" : "No Risk",
         normalRange: "N/A",
         importance: recordData.smokingStatus === "current" ? 5 : 0
       });

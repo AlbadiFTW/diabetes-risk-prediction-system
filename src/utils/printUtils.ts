@@ -341,12 +341,13 @@ export function printAssessment(assessment: any, patientName?: string, medicalRe
         }
         
         if (data.smokingStatus) {
+          const smokingValue = data.smokingStatus.charAt(0).toUpperCase() + data.smokingStatus.slice(1);
           factors.push({
             name: "Smoking Status",
-            value: data.smokingStatus.charAt(0).toUpperCase() + data.smokingStatus.slice(1),
+            value: smokingValue,
             unit: "",
             importance: data.smokingStatus === "current" ? 5 : 0,
-            status: data.smokingStatus === "current" ? "Risk Factor" : "Not a Risk Factor"
+            status: data.smokingStatus === "current" ? "Risk Factor" : "No Risk"
           });
         }
         
